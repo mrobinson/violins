@@ -1,44 +1,62 @@
 #!/usr/bin/env python3
 
 import json
+import os
 import time
 import switrs
 import sqlite3
+import sys
 
 from googlegeocoder import GoogleGeocoder
 
-def read_location_database():
-    with open("locations.json", 'r') as location_file:
-       return json.loads(location_file.read())
+class CollisionGoecoder():
+    def __init__(self, city_directory):
+        self.city_directory = city_directory
+        self.city_name = os.path.basename(city_directory)
+        self.geocoder = GoogleGeocoder()
+        self.read_location_database()
 
-def write_location_database(new_database):
-    with open("locations.json", 'w') as location_file:
-       return location_file.write(json.dumps(new_database, sort_keys=True))
+    def location_database_path(self):
+        return os.path.join(self.city_directory, "locations.json")
 
-def get_location(collision, location_database, geocoder):
-    location_key = '{0} and {1}'.format(collision.primary_road, collision.secondary_road)
-    if not location_key in location_database:
+    def read_location_database(self):
+        with open(self.location_database_path(), 'r') as location_file:
+           self.location_database = json.loads(location_file.read())
+
+    def write_location_database(self):
+        with open(self.location_database_path(), 'w') as location_file:
+           return location_file.write(json.dumps(self.location_database, sort_keys=True))
+
+    def get_location_for_collision(self, collision):
+        location_key = '{0} and {1}'.format(collision.primary_road, collision.secondary_road)
+        if location_key in self.location_database:
+            return self.location_database[location_key]
+
         try:
             time.sleep(1) # Be kind.
-            search = geocoder.get('{0}, Oakland, CA'.format(location_key))
-            location_database[location_key] = [search[0].geometry.location.lat, search[0].geometry.location.lng]
-            write_location_database(location_database)
+            search = self.geocoder.get('{0}, Oakland, CA'.format(location_key))
+            self.location_database[location_key] = [search[0].geometry.location.lat, search[0].geometry.location.lng]
         except:
             return [0, 0]
-    return location_database[location_key]
+        return self.location_database[location_key]
 
-def add_location_to_all_query_results(connection, query):
-    location_database = read_location_database()
-    geocoder = GoogleGeocoder()
+    def fill_query_results_location(self, query):
+        connection = sqlite3.connect(os.path.join(self.city_directory, "all-collisions.db"))
+        try:
+            for row in connection.execute('SELECT * FROM collisions WHERE {0};'.format(query)):
+                collision = switrs.Collision(row)
+                (collision.latitude, collision.longitude) = self.get_location_for_collision(collision)
+                print(collision)
 
-    for row in connection.execute('SELECT * FROM collisions WHERE {0};'.format(query)):
-        collision = switrs.Collision(row)
-        (collision.latitude, collision.longitude) = get_location(collision, location_database, geocoder)
-        print(collision)
+            connection.commit()
 
-    write_location_database(location_database)
+        finally:
+            connection.close()
+            self.write_location_database()
 
-connection = sqlite3.connect("all-collisions.db")
-add_location_to_all_query_results(connection, 'motor_vehicle_with = "G" OR motor_vehicle_with = "B"')
-connection.commit()
-connection.close()
+if __name__ == "__main__":
+    if len(sys.argv) < 2:
+        print("Must specify city directory")
+        sys.exit(1)
+
+    CollisionGoecoder(sys.argv[1]).fill_query_results_location('motor_vehicle_with = "G" OR motor_vehicle_with = "B"')
