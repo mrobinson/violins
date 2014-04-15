@@ -40,15 +40,22 @@ class CollisionGoecoder():
             return [0, 0]
         return self.location_database[location_key]
 
+    def update_collision_locations_in_database(self, connection, collisions):
+        for collision in collisions:
+            connection.execute('UPDATE collisions SET latitude=?,longitude=? WHERE id=?', (collision.latitude, collision.longitude, collision.id))
+        connection.commit()
+
     def fill_query_results_location(self, query):
         connection = sqlite3.connect(os.path.join(self.city_directory, "all-collisions.db"))
+        collisions = []
         try:
             for row in connection.execute('SELECT * FROM collisions WHERE {0};'.format(query)):
                 collision = switrs.Collision(row)
+                collisions.append(collision)
                 (collision.latitude, collision.longitude) = self.get_location_for_collision(collision)
                 print(collision)
 
-            connection.commit()
+            self.update_collision_locations_in_database(connection, collisions)
 
         finally:
             connection.close()
