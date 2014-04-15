@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+
+<html>
+    <head>
+         <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.2/leaflet.css" />
+         <script src="http://cdn.leafletjs.com/leaflet-0.7.2/leaflet.js"></script>
+         <script type="text/javascript" src="http://maps.stamen.com/js/tile.stamen.js?v1.1.3"></script>
+    </head>
+
+    <body>
+        <div id="map" style="height: 500px; width: 1000px;"></div>
+    </body>
+
+    <script>
+        var map = L.map('map').setView([37.8044, -122.2708], 13);
+        map.addLayer(new L.StamenTileLayer("watercolor"));
+    </script>
+</html>
