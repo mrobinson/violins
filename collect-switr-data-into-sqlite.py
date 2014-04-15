@@ -2,8 +2,9 @@
 
 import csv
 import os
-import switrs
 import sqlite3
+import switrs
+import sys
 
 def create_tables(connection):
     connection.execute('CREATE TABLE collisions(' + \
@@ -149,11 +150,22 @@ def read_data(filename, cls):
        return [cls(row) for row in csv.reader(csvfile)]
 
 def read_data_from_directory(directory):
+    print('Reading data from {0}'.format(directory))
     read_data(os.path.join(directory, 'CollisionRecords.txt'), switrs.Collision)
     for party in read_data(os.path.join(directory, 'PartyRecords.txt'), switrs.Party):
         switrs.Collision.collisions[party.collision_id].parties.append(party)
     for victim in read_data(os.path.join(directory, 'VictimRecords.txt'), switrs.Victim):
         switrs.Collision.collisions[victim.collision_id].victims.append(victim)
 
-read_data_from_directory('Oakland-2012')
-create_database('all-collisions.db')
+if __name__ == "__main__":
+    if len(sys.argv) < 2:
+        print('Must specify city directory')
+        sys.exit(1)
+
+    city_directory = sys.argv[1]
+    for subdir in os.listdir(city_directory):
+        subdir = os.path.join(city_directory, subdir)
+        if os.path.isdir(subdir):
+            read_data_from_directory(subdir)
+
+    create_database(os.path.join(city_directory, 'all-collisions.db'))
