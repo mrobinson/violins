@@ -162,12 +162,12 @@ function filterData(years, sexes, types) {
     return results;
 }
 
-function CollisionPopup(element_id) {
+function CollisionPopup() {
     var self = this;
-    this.element = document.getElementById(element_id);
 
     this.show = function(collisionGroup) {
-        var popupHTML = '<div class="intersection">'
+        var popupHTML = '<div class="collision_detail_popup">';
+        popupHTML += '<div class="intersection">';
         popupHTML += collisionGroup[0].intersection;
         popupHTML += '</div>';
 
@@ -175,7 +175,11 @@ function CollisionPopup(element_id) {
             var collision = collisionGroup[i];
             popupHTML += '<div class="collision">';
             popupHTML += '<div class="header">';
-            popupHTML += '<div class="symbol">&#x1f6b2;</div>';
+            if (collision.type == "bike") {
+                popupHTML += '<div class="symbol">&#x1f6b2;</div>';
+            } else {
+                popupHTML += '<div class="symbol">&#x1f6b6;</div>';
+            }
             popupHTML += '<div class="date">' + collision.date + '</div>';
             popupHTML += '<div class="time">' + collision.time + '</div>';
             popupHTML += '</div>';
@@ -187,7 +191,9 @@ function CollisionPopup(element_id) {
             popupHTML += '</div>';
         }
 
-        this.element.innerHTML = popupHTML;
+        popupHTML += '</div>';
+
+        return popupHTML;
     }
 }
 
@@ -218,7 +224,9 @@ function Map(mapElementID, collisionPopup) {
                 fillOpacity: 1.0,
                 opacity: 1.0,
             }).addTo(self.map).on('click', function(e) {
-                self.collisionPopup.show(e.target.collisionGroup);
+                var popupText = self.collisionPopup.show(e.target.collisionGroup);
+                var popupLocation = e.target.collisionGroup[0].location;
+                var popup = L.popup().setLatLng(popupLocation).setContent(popupText).openOn(self.map);
             }).collisionGroup = group;
         }
     }

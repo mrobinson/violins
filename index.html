@@ -2,7 +2,6 @@
 
 <html>
     <head>
-         <link rel="stylesheet" href="style.css" />
          <script type="text/javascript" src="raphael-min.js"></script>
          <script type="text/javascript" src="g.raphael-min.js"></script>
          <script type="text/javascript" src="g.bar-min.js"></script>
@@ -12,10 +11,11 @@
          <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.2/leaflet.css" />
          <script src="http://cdn.leafletjs.com/leaflet-0.7.2/leaflet.js"></script>
          <script type="text/javascript" src="http://maps.stamen.com/js/tile.stamen.js?v1.1.3"></script>
+
+         <link rel="stylesheet" href="style.css" />
     </head>
 
     <body>
-        <div id="collision_detail_popup"> </div>
         <div id="menu">
             <div id="#sexchart" style="width: 200px; height 200px;"></div>
             <div id="#injurychart" style="width: 200px; height 200px;"></div>
@@ -35,7 +35,7 @@
     </body>
 
     <script>
-        var map = new Map('map', new CollisionPopup('collision_detail_popup'));
+        var map = new Map('map', new CollisionPopup());
         var statisticsDisplay = new StatisticsDisplay();
 
         Collision.addFromJSON(data);
