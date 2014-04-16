@@ -72,6 +72,16 @@ function Collision(jsonCollision) {
     }
 }
 
+Collision.addFromJSON = function(data) {
+    if (Collision.collisions === undefined) {
+        Collision.collisions = [];
+    }
+
+    for (var i = 0; i < data.length; i++) {
+        Collision.collisions.push(new Collision(data[i]));
+    }
+}
+
 function CollisionStatistics(collisionGroups) {
     var self = this;
     this.victimInjuries = [0, 0, 0, 0, 0];
@@ -113,16 +123,6 @@ function CollisionStatistics(collisionGroups) {
         for (var j = 0; j < collisionGroups[i].length; j++) {
             this.processCollision(collisionGroups[i][j]);
          }
-    }
-}
-
-function addData(data) {
-    if (Collision.collisions === undefined) {
-        Collision.collisions = [];
-    }
-
-    for (var i = 0; i < data.length; i++) {
-        Collision.collisions.push(new Collision(data[i]));
     }
 }
 

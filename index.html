@@ -64,7 +64,7 @@
         var map = new Map('map');
         var statisticsDisplay = new StatisticsDisplay();
 
-        addData(data);
+        Collision.addFromJSON(data);
         var collisionGroups = filterData(ALL_YEARS, ALL_SEXES, ALL_TYPES);
         map.addCollisionGroupsToMap(collisionGroups);
         statisticsDisplay.updateStatisticsDisplay(collisionGroups);
