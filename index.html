@@ -96,6 +96,8 @@
   }
         function Collision(jsonCollision) {
             var self = this;
+            this.intersection = jsonCollision.intersection;
+            this.date = jsonCollision.date;
             this.year = jsonCollision.year;
             this.sex = jsonCollision.sex;
             this.type = jsonCollision.type;
@@ -119,9 +121,18 @@
             this.numberOfSevereInjuries = function() {
                 return self.countVictims(function(victim) { return victim.injury === 2; });
             }
+
+            this.toString = function() {
+                var result = self.intersection + " " + self.date;
+                for (var v = 0; v < self.victims.length; v++) {
+                    var victim = self.victims[v];
+                    result += "\n" + victim.sex + " " + victim.age + " " + victim.injury;
+                }
+                return result;
+            }
         }
 
-        function CollisionStatistics(collisions) {
+        function CollisionStatistics(collisionGroups) {
             var self = this;
             this.victimInjuries = [0, 0, 0, 0, 0];
             this.victimSexes = [0, 0, 0];
@@ -158,8 +169,10 @@
                 }
             }
 
-            for (var i = 0; i < collisions.length; i++) {
-                this.processCollision(collisions[i]);
+            for (var i = 0; i < collisionGroups.length; i++) {
+                for (var j = 0; j < collisionGroups[i].length; j++) {
+                    this.processCollision(collisionGroups[i][j]);
+                 }
             }
 
         }
@@ -175,7 +188,18 @@
         }
 
         function filterData(years, sexes, types) {
+            var resultMap = {};
             var results = [];
+
+            function addToResults(collision) {
+                if (resultMap[collision.intersection] == undefined) {
+                    resultMap[collision.intersection] = [];
+                    results.push(resultMap[collision.intersection]);
+                }
+
+                resultMap[collision.intersection].push(collision);
+            }
+
             for (var i = 0; i < Collision.collisions.length; i++) {
                 var collision = Collision.collisions[i];
                 if (years.indexOf(collision.year) == -1)
@@ -193,7 +217,7 @@
                 if (!foundSex)
                     continue;
 
-                results.push(collision);
+                addToResults(collision);
             }
             return results;
         }
@@ -202,32 +226,38 @@
         map.addLayer(new L.StamenTileLayer("toner"));
 
         addData(data);
-        var collisions = filterData(ALL_YEARS, ALL_SEXES, ALL_TYPES);
-        for (var i = 0; i < collisions.length; i++) {
-            var collision = collisions[i];
-            var fatal = collision.numberOfFatalities() > 0;
-            var severe = collision.numberOfSevereInjuries() > 0;
+        var collisionGroups = filterData(ALL_YEARS, ALL_SEXES, ALL_TYPES);
+        for (var i = 0; i < collisionGroups.length; i++) {
+            var group = collisionGroups[i];
+            var size = group.length > 1 ? 40 : 20;
+            var color = 'gold';
 
-            if (fatal) {
-                var color = 'red';
-            } else if (severe) {
-                var color = 'purple';
-            } else {
-                var color = 'gold';
+            for (var j = 0; j < group.length; j++) {
+                var collision = group[j];
+                if (collision.numberOfFatalities() > 0) {
+                    color = 'red';
+                } else if (collision.numberOfSevereInjuries() > 0 && color != 'red') {
+                    color = 'purple';
+                }
             }
 
-            var marker = L.circle(collision.location, 20, {
+            var marker = L.circle(group[0].location, size, {
                 color: color,
                 fillColor: color,
                 fillOpacity: 1.0,
                 opacity: 1.0,
-            }).addTo(map);
+            }).addTo(map).on('click', function(e) {
+                var group = e.target.collisionGroup;
 
-            if (!fatal && !severe)
-                marker.bringToBack();
+                var result = "";
+                for (var i = 0; i < group.length; i++) {
+                    result += "\n" + group[i].toString();
+                }
+                alert(result);
+            }).collisionGroup = group;
         }
 
-        var stats = new CollisionStatistics(collisions);
+        var stats = new CollisionStatistics(collisionGroups);
         var sexChart = Raphael("#sexchart", "200px", "200px");
         var injuryChart = Raphael("#injurychart", "200px", "200px");
         var ageChart = Raphael("#agechart", "200px", "200px");
