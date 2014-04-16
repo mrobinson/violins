@@ -161,9 +161,9 @@ function filterData(years, sexes, types) {
     return results;
 }
 
-function Map(map_element_id) {
+function Map(mapElementID) {
     var self = this;
-    this.map = L.map('map').setView(INITIAL_MAP_CENTER, INITIAL_MAP_ZOOM);
+    this.map = L.map(mapElementID).setView(INITIAL_MAP_CENTER, INITIAL_MAP_ZOOM);
     this.map.addLayer(new L.StamenTileLayer('toner'));
 
     this.addCollisionGroupsToMap = function(collisionGroups) {
