@@ -44,6 +44,7 @@ if __name__ == "__main__":
             'location': [float(collision.latitude), float(collision.longitude)],
             'date': collision.date,
             'time': collision.time,
+            'year': int(collision.year),
             'victims': victims,
         })
 

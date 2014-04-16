@@ -60,71 +60,180 @@
     </body>
 
     <script>
+        var ALL_YEARS = [2008, 2009, 2010, 2011, 2012];
+        var ALL_SEXES = ["M", "F"];
+        var ALL_TYPES = ["bike", "pedestrian"];
+
+        if (!Array.prototype.indexOf) {
+    Array.prototype.indexOf = function (searchElement, fromIndex) {
+      if ( this === undefined || this === null ) {
+        throw new TypeError( '"this" is null or not defined' );
+      }
+
+      var length = this.length >>> 0; // Hack to convert object.length to a UInt32
+
+      fromIndex = +fromIndex || 0;
+
+      if (Math.abs(fromIndex) === Infinity) {
+        fromIndex = 0;
+      }
+
+      if (fromIndex < 0) {
+        fromIndex += length;
+        if (fromIndex < 0) {
+          fromIndex = 0;
+        }
+      }
+
+      for (;fromIndex < length; fromIndex++) {
+        if (this[fromIndex] === searchElement) {
+          return fromIndex;
+        }
+      }
+
+      return -1;
+    };
+  }
+        function Collision(jsonCollision) {
+            var self = this;
+            this.year = jsonCollision.year;
+            this.sex = jsonCollision.sex;
+            this.type = jsonCollision.type;
+            this.victims = jsonCollision.victims;
+            this.location = jsonCollision.location;
+
+            this.countVictims = function(test) {
+                var count = 0;
+                for (var v = 0; v < self.victims.length; v++) {
+                    if (test(self.victims[v])) {
+                        count++;
+                    }
+                }
+                return count;
+            }
+
+            this.numberOfFatalities = function() {
+                return self.countVictims(function(victim) { return victim.injury === 1; });
+            }
+
+            this.numberOfSevereInjuries = function() {
+                return self.countVictims(function(victim) { return victim.injury === 2; });
+            }
+        }
+
+        function CollisionStatistics(collisions) {
+            var self = this;
+            this.victimInjuries = [0, 0, 0, 0, 0];
+            this.victimSexes = [0, 0, 0];
+            this.victimAges = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+            this.collisionYears = {};
+            this.yearsSeen = [];
+
+            this.processCollision = function(collision) {
+                if (self.yearsSeen.indexOf(collision.year) == -1) {
+                    self.yearsSeen.push(collision.year);
+                    self.collisionYears[collision.year] = 0;
+                }
+                self.collisionYears[collision.year]++;
+                for (var v = 0; v < collision.victims.length; v++) {
+                    self.processVictim(collision.victims[v]);
+                }
+            }
+
+            this.processVictim = function(victim) {
+                if (victim.sex == "F") {
+                    self.victimSexes[0]++;
+                } else if (victim.sex == "M") {
+                    self.victimSexes[1]++;
+                } else {
+                    self.victimSexes[2]++;
+                }
+
+                self.victimInjuries[victim.injury]++;
+
+                 // Sometimes ages are unspecified by way of very large values.
+                if (victim.age >= 0 && victim.age < 150) {
+                    var ageGroup = Math.min(Math.floor(victim.age/10), self.victimAges.length - 1);
+                    self.victimAges[ageGroup]++;
+                }
+            }
+
+            for (var i = 0; i < collisions.length; i++) {
+                this.processCollision(collisions[i]);
+            }
+
+        }
+
+        function addData(data) {
+            if (Collision.collisions === undefined) {
+                Collision.collisions = [];
+            }
+
+            for (var i = 0; i < data.length; i++) {
+                Collision.collisions.push(new Collision(data[i]));
+            }
+        }
+
+        function filterData(years, sexes, types) {
+            var results = [];
+            for (var i = 0; i < Collision.collisions.length; i++) {
+                var collision = Collision.collisions[i];
+                if (years.indexOf(collision.year) == -1)
+                    continue;
+                if (types.indexOf(collision.type) == -1)
+                    continue;
+
+                var foundSex = false;
+                for (var v = 0; v < collision.victims.length; v++) {
+                    if (sexes.indexOf(collision.victims[v].sex) != -1) {
+                        foundSex = true;
+                        break;
+                    }
+                }
+                if (!foundSex)
+                    continue;
+
+                results.push(collision);
+            }
+            return results;
+        }
+
         var map = L.map('map').setView([37.8044, -122.2708], 13);
         map.addLayer(new L.StamenTileLayer("toner"));
 
-        var sexCount = [0, 0];
-        var injuryCount = [0, 0, 0, 0, 0];
-        var ageCount = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+        addData(data);
+        var collisions = filterData(ALL_YEARS, ALL_SEXES, ALL_TYPES);
+        for (var i = 0; i < collisions.length; i++) {
+            var collision = collisions[i];
+            var fatal = collision.numberOfFatalities() > 0;
+            var severe = collision.numberOfSevereInjuries() > 0;
 
-        var fatalities = [];
-        var nonFatalities = [];
-        for (var i = 0; i < data.length; i++) {
-            var collision = data[i];
-            var fatal = false;
-
-            for (var v = 0; v < collision.victims.length; v++) {
-                var victim = collision.victims[v];
-                if (victim.sex == "F") {
-                    sexCount[0]++;
-                } else {
-                    sexCount[1]++;
-                }
-
-                if (victim.injury == 1) {
-                    fatal = true;
-                }
-
-                injuryCount[victim.injury]++;
-                if (victim.age < 150) { // Strange values in the data.
-                    ageCount[Math.floor(victim.age/10)]++;
-                }
-            }
-
-            if (!fatal) {
-                nonFatalities.push(collision);
+            if (fatal) {
+                var color = 'red';
+            } else if (severe) {
+                var color = 'purple';
             } else {
-                fatalities.push(collision);
+                var color = 'gold';
             }
-        }
 
-        for (var i = 0; i < nonFatalities.length; i++) {
-            var collision = nonFatalities[i];
-            L.circle(collision.location, 40, {
-                color: 'gold',
-                fillColor: 'gold',
-                fillOpacity: 1.0,
-                opacity: 1.0,
-            }).addTo(map);
-        }
-
-        for (var i = 0; i < fatalities.length; i++) {
-            var collision = fatalities[i];
-            L.circle(collision.location, 20, {
-                color: 'red',
-                fillColor: 'red',
+            var marker = L.circle(collision.location, 20, {
+                color: color,
+                fillColor: color,
                 fillOpacity: 1.0,
                 opacity: 1.0,
             }).addTo(map);
 
+            if (!fatal && !severe)
+                marker.bringToBack();
         }
 
+        var stats = new CollisionStatistics(collisions);
         var sexChart = Raphael("#sexchart", "200px", "200px");
         var injuryChart = Raphael("#injurychart", "200px", "200px");
         var ageChart = Raphael("#agechart", "200px", "200px");
 
-        sexChart.barchart(0, 0, 200, 100, [sexCount[0], sexCount[1]], {})
-        injuryChart.barchart(0, 0, 200, 100, injuryCount, {})
-        ageChart.barchart(0, 0, 200, 100, ageCount, {})
+        sexChart.barchart(0, 0, 200, 100, stats.victimSexes, {})
+        injuryChart.barchart(0, 0, 200, 100, stats.victimInjuries, {})
+        ageChart.barchart(0, 0, 200, 100, stats.victimAges, {})
     </script>
 </html>
