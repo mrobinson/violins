@@ -35,7 +35,7 @@ body {
     z-index: 2000;
 }
 
-#toggles {
+#toolbar {
     position: absolute;
     overflow: hidden;
     bottom: 0px;
@@ -45,13 +45,13 @@ body {
     z-index: 2000;
 }
 
-#toggles > .button-bar {
+#toolbar > .button-bar {
     float: left;
     margin-top: 10px; 
     margin-right: 10px;
 }
 
-#toggles > .button-bar:last-child {
+#toolbar > .button-bar:last-child {
     margin-right: 10px;
 }
 
