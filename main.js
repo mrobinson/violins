@@ -39,6 +39,7 @@ function Collision(jsonCollision) {
     this.intersection = jsonCollision.intersection;
     this.date = jsonCollision.date;
     this.year = jsonCollision.year;
+    this.time = jsonCollision.time;
     this.sex = jsonCollision.sex;
     this.type = jsonCollision.type;
     this.victims = jsonCollision.victims;
@@ -161,8 +162,38 @@ function filterData(years, sexes, types) {
     return results;
 }
 
-function Map(mapElementID) {
+function CollisionPopup(element_id) {
     var self = this;
+    this.element = document.getElementById(element_id);
+
+    this.show = function(collisionGroup) {
+        var popupHTML = '<div class="intersection">'
+        popupHTML += collisionGroup[0].intersection;
+        popupHTML += '</div>';
+
+        for (var i = 0; i < collisionGroup.length; i++) {
+            var collision = collisionGroup[i];
+            popupHTML += '<div class="collision">';
+            popupHTML += '<div class="header">';
+            popupHTML += '<div class="symbol">&#x1f6b2;</div>';
+            popupHTML += '<div class="date">' + collision.date + '</div>';
+            popupHTML += '<div class="time">' + collision.time + '</div>';
+            popupHTML += '</div>';
+
+            for (var v = 0; v < collision.victims.length; v++) {
+                var victim = collision.victims[v];
+                popupHTML += '<div class="victim">' + victim.age + " year old, " + victim.sex + '</div>';
+            }
+            popupHTML += '</div>';
+        }
+
+        this.element.innerHTML = popupHTML;
+    }
+}
+
+function Map(mapElementID, collisionPopup) {
+    var self = this;
+    this.collisionPopup = collisionPopup;
     this.map = L.map(mapElementID).setView(INITIAL_MAP_CENTER, INITIAL_MAP_ZOOM);
     this.map.addLayer(new L.StamenTileLayer('toner'));
 
@@ -187,13 +218,7 @@ function Map(mapElementID) {
                 fillOpacity: 1.0,
                 opacity: 1.0,
             }).addTo(self.map).on('click', function(e) {
-                var group = e.target.collisionGroup;
-
-                var result = "";
-                for (var i = 0; i < group.length; i++) {
-                    result += "\n" + group[i].toString();
-                }
-                alert(result);
+                self.collisionPopup.show(e.target.collisionGroup);
             }).collisionGroup = group;
         }
     }

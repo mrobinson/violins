@@ -7,7 +7,7 @@ body {
     margin: 0px;
     height: 100%;
     width: 100%
-    font-family: sans-serif;
+    font-family: Helvetica, Arial, sans-serif;
     font-weight: bold;
     font-size: 10pt;
 }
@@ -33,6 +33,21 @@ body {
     background-color: rgba(256, 256, 256, 0.95);
     box-shadow: 1px 1px 10px rgba(0, 0, 0, 0.2);
     z-index: 2000;
+}
+
+
+#collision_detail_popup {
+    position: absolute;
+    overflow: hidden;
+    top: 0;
+    left: 40px;
+    width; 200px
+    height: 500px
+    padding: 5px;
+    background-color: rgba(256, 256, 256, 0.95);
+    box-shadow: 1px 1px 10px rgba(0, 0, 0, 0.2);
+    z-index: 2000;
+    font-family: Helvetica, Arial, sans-serif;
 }
 
 #toolbar {
@@ -143,5 +158,58 @@ body {
 
 .button-bar-button:focus {
   z-index: 2000;
+}
+
+#collision_detail_popup {
+    position: absolute;
+    overflow: hidden;
+    top: 0;
+    left: 40px;
+    width: 220px;
+    padding: 5px;
+    background-color: rgba(256, 256, 256, 0.95);
+    box-shadow: 1px 1px 10px rgba(0, 0, 0, 0.2);
+    z-index: 2000;
+    font-family: Helvetica, Arial, sans-serif;
+    font-weight: bold;
+}
+
+#collision_detail_popup .intersection {
+    font-size: 25px;
+    line-height: 25px;
+    text-align: center;
+}
+
+#collision_detail_popup .collision {
+    margin-top: 20px;
+    margin-left: 10px;
+    margin-bottom: 12px;
+}
+
+#collision_detail_popup .symbol {
+    font-size: 50px;
+    font-weight: normal;
+    margin-right: 10px;
+    line-height: 40px;
+    float: left;
+}
+
+#collision_detail_popup .header {
+    margin-bottom: 10px;
+}
+
+#collision_detail_popup .date {
+    font-size: 18px;
+    line-height: 20px;
+}
+
+#collision_detail_popup .time {
+    font-size: 15px;
+    line-height: 20px;
+}
+
+#collision_detail_popup .victim {
+    margin-left: 15px;
+    font-size: 14px;
 }
 

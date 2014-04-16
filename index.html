@@ -15,6 +15,7 @@
     </head>
 
     <body>
+        <div id="collision_detail_popup"> </div>
         <div id="menu">
             <div id="#sexchart" style="width: 200px; height 200px;"></div>
             <div id="#injurychart" style="width: 200px; height 200px;"></div>
@@ -34,13 +35,12 @@
     </body>
 
     <script>
-        var map = new Map('map');
+        var map = new Map('map', new CollisionPopup('collision_detail_popup'));
         var statisticsDisplay = new StatisticsDisplay();
 
         Collision.addFromJSON(data);
         var collisionGroups = filterData(ALL_YEARS, ALL_SEXES, ALL_TYPES);
         map.addCollisionGroupsToMap(collisionGroups);
         statisticsDisplay.updateStatisticsDisplay(collisionGroups);
-
     </script>
 </html>
