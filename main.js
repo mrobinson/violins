@@ -37,9 +37,8 @@ if (!Array.prototype.indexOf) {
 function Collision(jsonCollision) {
     var self = this;
     this.intersection = jsonCollision.intersection;
-    this.date = jsonCollision.date;
-    this.year = jsonCollision.year;
-    this.time = jsonCollision.time;
+    this.date = new Date(jsonCollision.time * 1000);
+    this.year = this.date.getFullYear();
     this.sex = jsonCollision.sex;
     this.type = jsonCollision.type;
     this.victims = jsonCollision.victims;
@@ -61,6 +60,12 @@ function Collision(jsonCollision) {
 
     this.numberOfSevereInjuries = function() {
         return self.countVictims(function(victim) { return victim.injury === 2; });
+    }
+
+    this.getDateString = function() {
+        var monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Nov', 'Dec'];
+        console.log(self.date);
+        return monthNames[self.date.getMonth() - 1] + ' ' + self.date.getDate() + ', ' + self.date.getFullYear();
     }
 
     this.toString = function() {
@@ -180,8 +185,8 @@ function CollisionPopup() {
             } else {
                 popupHTML += '<div class="symbol">&#x1f6b6;</div>';
             }
-            popupHTML += '<div class="date">' + collision.date + '</div>';
-            popupHTML += '<div class="time">' + collision.time + '</div>';
+            popupHTML += '<div class="date">' + collision.getDateString() + '</div>';
+            popupHTML += '<div class="time">' + collision.date.getHours() + ':' + collision.date.getMinutes() + '</div>';
             popupHTML += '</div>';
 
             for (var v = 0; v < collision.victims.length; v++) {

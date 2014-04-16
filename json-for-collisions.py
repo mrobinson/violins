@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+import calendar
+import datetime
 import json
 import os
 import sqlite3
@@ -38,13 +40,12 @@ if __name__ == "__main__":
                 'sex': victim.sex,
                 'injury': int(victim.degree_of_injury),
             })
+        time = calendar.timegm(datetime.datetime.strptime(collision.date + collision.time, "%Y%m%d%H%M").utctimetuple())
         data.append({
             'type': 'bike' if collision.motor_vehicle_with == 'G' else 'pedestrian',
             'intersection': '{0} and {1}'.format(collision.primary_road, collision.secondary_road),
             'location': [float(collision.latitude), float(collision.longitude)],
-            'date': collision.date,
-            'time': collision.time,
-            'year': int(collision.year),
+            'time': time,
             'victims': victims,
         })
 
