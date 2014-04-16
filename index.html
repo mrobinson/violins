@@ -63,6 +63,8 @@
         var ALL_YEARS = [2008, 2009, 2010, 2011, 2012];
         var ALL_SEXES = ["M", "F"];
         var ALL_TYPES = ["bike", "pedestrian"];
+        var INITIAL_MAP_CENTER = [37.8044, -122.2708];
+        var INITIAL_MAP_ZOOM = 13;
 
         if (!Array.prototype.indexOf) {
     Array.prototype.indexOf = function (searchElement, fromIndex) {
@@ -222,48 +224,66 @@
             return results;
         }
 
-        var map = L.map('map').setView([37.8044, -122.2708], 13);
-        map.addLayer(new L.StamenTileLayer("toner"));
+        function Map(map_element_id) {
+            var self = this;
+            this.map = L.map('map').setView(INITIAL_MAP_CENTER, INITIAL_MAP_ZOOM);
+            this.map.addLayer(new L.StamenTileLayer('toner'));
+
+            this.addCollisionGroupsToMap = function(collisionGroups) {
+                for (var i = 0; i < collisionGroups.length; i++) {
+                    var group = collisionGroups[i];
+                    var size = group.length > 1 ? 40 : 20;
+                    var color = 'gold';
+
+                    for (var j = 0; j < group.length; j++) {
+                        var collision = group[j];
+                        if (collision.numberOfFatalities() > 0) {
+                            color = 'red';
+                        } else if (collision.numberOfSevereInjuries() > 0 && color != 'red') {
+                            color = 'purple';
+                        }
+                    }
+
+                    var marker = L.circle(group[0].location, size, {
+                        color: color,
+                        fillColor: color,
+                        fillOpacity: 1.0,
+                        opacity: 1.0,
+                    }).addTo(map).on('click', function(e) {
+                        var group = e.target.collisionGroup;
+
+                        var result = "";
+                        for (var i = 0; i < group.length; i++) {
+                            result += "\n" + group[i].toString();
+                        }
+                        alert(result);
+                    }).collisionGroup = group;
+                }
+            }
+        }
+
+        function StatisticsDisplay() {
+            var self = this;
+            this.sexChart = Raphael("#sexchart", "200px", "200px");
+            this.injuryChart = Raphael("#injurychart", "200px", "200px");
+            this.ageChart = Raphael("#agechart", "200px", "200px");
+
+            this.updateStatisticsDisplay = function(collisionGroups) {
+                var stats = new CollisionStatistics(collisionGroups);
+
+                self.sexChart.barchart(0, 0, 200, 100, stats.victimSexes, {})
+                self.injuryChart.barchart(0, 0, 200, 100, stats.victimInjuries, {})
+                self.ageChart.barchart(0, 0, 200, 100, stats.victimAges, {})
+            }
+        }
+
+        var map = new Map('map');
+        var statisticsDisplay = new StatisticsDisplay();
 
         addData(data);
         var collisionGroups = filterData(ALL_YEARS, ALL_SEXES, ALL_TYPES);
-        for (var i = 0; i < collisionGroups.length; i++) {
-            var group = collisionGroups[i];
-            var size = group.length > 1 ? 40 : 20;
-            var color = 'gold';
+        map.addCollisionGroupsToMap(collisionGroups);
+        statisticsDisplay.updateStatisticsDisplay(collisionGroups);
 
-            for (var j = 0; j < group.length; j++) {
-                var collision = group[j];
-                if (collision.numberOfFatalities() > 0) {
-                    color = 'red';
-                } else if (collision.numberOfSevereInjuries() > 0 && color != 'red') {
-                    color = 'purple';
-                }
-            }
-
-            var marker = L.circle(group[0].location, size, {
-                color: color,
-                fillColor: color,
-                fillOpacity: 1.0,
-                opacity: 1.0,
-            }).addTo(map).on('click', function(e) {
-                var group = e.target.collisionGroup;
-
-                var result = "";
-                for (var i = 0; i < group.length; i++) {
-                    result += "\n" + group[i].toString();
-                }
-                alert(result);
-            }).collisionGroup = group;
-        }
-
-        var stats = new CollisionStatistics(collisionGroups);
-        var sexChart = Raphael("#sexchart", "200px", "200px");
-        var injuryChart = Raphael("#injurychart", "200px", "200px");
-        var ageChart = Raphael("#agechart", "200px", "200px");
-
-        sexChart.barchart(0, 0, 200, 100, stats.victimSexes, {})
-        injuryChart.barchart(0, 0, 200, 100, stats.victimInjuries, {})
-        ageChart.barchart(0, 0, 200, 100, stats.victimAges, {})
     </script>
 </html>
