@@ -3,6 +3,9 @@ var ALL_SEXES = ["M", "F"];
 var ALL_TYPES = ["bike", "pedestrian"];
 var INITIAL_MAP_CENTER = [37.8044, -122.2708];
 var INITIAL_MAP_ZOOM = 13;
+var FATAL_COLOR = 'red';
+var SEVERE_INJURY_COLOR = 'purple';
+var NON_INJURY_COLOR = 'gold';
 
 if (!Array.prototype.indexOf) {
     Array.prototype.indexOf = function (searchElement, fromIndex) {
@@ -59,16 +62,23 @@ function Collision(jsonCollision) {
     }
 
     this.numberOfFatalities = function() {
-        return self.countVictims(function(victim) { return victim.injury === 1; });
+        return self.countVictims(function(victim) { return victim.isFatality(); });
     }
 
     this.numberOfSevereInjuries = function() {
-        return self.countVictims(function(victim) { return victim.injury === 2; });
+        return self.countVictims(function(victim) { return victim.isSevereInjury(); });
     }
 
     this.getDateString = function() {
-        var monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Nov', 'Dec'];
-        return monthNames[self.date.getMonth() - 1] + ' ' + self.date.getDate() + ', ' + self.date.getFullYear();
+        var monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        return monthNames[self.date.getMonth()] + ' ' + self.date.getDate() + ', ' + self.date.getFullYear();
+    }
+
+    this.getTimeString = function() {
+        var minutes = String(self.date.getMinutes());
+        if (minutes.length < 2)
+            minutes = "0" + minutes;
+        return self.date.getHours() + ':' + minutes;
     }
 }
 
@@ -89,14 +99,27 @@ function Victim(victimJSON) {
     this.sex = victimJSON.sex;
 
     this.sexString = function() {
-        if (self.sex == "M") {
+        if (self.isMale()) {
             return "male";
-        } else if (self.sex == "F") {
+        } else if (self.isFemale()) {
             return "female";
         } else {
             return "";
         }
     }
+
+    this.ageString = function() {
+        if (self.age < 150) {
+            return String(self.age);
+        } else {
+            return "N/A";
+        }
+    }
+
+    this.isMale = function () { return self.sex == "M"; }
+    this.isFemale = function () { return self.sex == "F"; }
+    this.isFatality = function () { return self.injury == 1; }
+    this.isSevereInjury = function () { return self.injury == 2; }
 }
 
 function CollisionStatistics(collisionGroups) {
@@ -119,9 +142,9 @@ function CollisionStatistics(collisionGroups) {
     }
 
     this.processVictim = function(victim) {
-        if (victim.sex == "F") {
+        if (victim.isFemale()) {
             self.victimSexes[0]++;
-        } else if (victim.sex == "M") {
+        } else if (victim.isMale()) {
             self.victimSexes[1]++;
         } else {
             self.victimSexes[2]++;
@@ -189,6 +212,7 @@ function CollisionPopup() {
 
         for (var i = 0; i < collisionGroup.length; i++) {
             var collision = collisionGroup[i];
+            console.log(collision.date);
             popupHTML += '<div class="collision">';
             popupHTML += '<div class="header">';
             if (collision.type == "bike") {
@@ -197,12 +221,18 @@ function CollisionPopup() {
                 popupHTML += '<div class="symbol">&#x1f6b6;</div>';
             }
             popupHTML += '<div class="date">' + collision.getDateString() + '</div>';
-            popupHTML += '<div class="time">' + collision.date.getHours() + ':' + collision.date.getMinutes() + '</div>';
+            popupHTML += '<div class="time">' + collision.getTimeString() + '</div>';
             popupHTML += '</div>';
 
             for (var v = 0; v < collision.victims.length; v++) {
                 var victim = collision.victims[v];
-                popupHTML += '<div class="victim">' + victim.age + " year old " + victim.sexString() + '</div>';
+                var victimString = victim.ageString() + " year old " + victim.sexString();
+                if (victim.isFatality()) {
+                    victimString += '<span style="color: ' + FATAL_COLOR + ';"> (FATAL)</span>';
+                } else if (victim.isSevereInjury()) {
+                    victimString += '<span style="color: ' + SEVERE_INJURY_COLOR + ';"> (SEVERE INJURY)</span>';
+                }
+                popupHTML += '<div class="victim">' + victimString + '</div>';
             }
             popupHTML += '</div>';
         }
@@ -223,14 +253,14 @@ function Map(mapElementID, collisionPopup) {
         for (var i = 0; i < collisionGroups.length; i++) {
             var group = collisionGroups[i];
             var size = group.length > 1 ? 40 : 20;
-            var color = 'gold';
+            var color = NON_INJURY_COLOR;
 
             for (var j = 0; j < group.length; j++) {
                 var collision = group[j];
                 if (collision.numberOfFatalities() > 0) {
-                    color = 'red';
+                    color = FATAL_COLOR;
                 } else if (collision.numberOfSevereInjuries() > 0 && color != 'red') {
-                    color = 'purple';
+                    color = SEVERE_INJURY_COLOR;
                 }
             }
 
