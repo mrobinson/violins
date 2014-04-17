@@ -172,6 +172,10 @@ body {
     background: rgba(0, 0, 0, 0);
 }
 
+.leaflet-popup-close-button {
+    display: none;
+}
+
 .collision_detail_popup .intersection {
     font-size: 25px;
     line-height: 25px;
@@ -193,7 +197,7 @@ body {
 }
 
 .collision_detail_popup .header {
-    margin-bottom: 10px;
+    margin-bottom: 8px;
 }
 
 .collision_detail_popup .date {
