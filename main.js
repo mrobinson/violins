@@ -205,6 +205,14 @@ function CollisionPopup() {
     var self = this;
 
     this.show = function(collisionGroup) {
+        collisionGroup.sort(function(a, b) {
+            if (a.date > b.date)
+              return 1;
+            if (a.date < b.date)
+              return -1;
+            return 0;
+        });
+
         var popupHTML = '<div class="collision_detail_popup">';
         popupHTML += '<div class="intersection">';
         popupHTML += collisionGroup[0].intersection;
