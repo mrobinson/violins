@@ -1,6 +1,6 @@
-var ALL_YEARS = [2008, 2009, 2010, 2011, 2012];
-var ALL_SEXES = ["M", "F"];
-var ALL_TYPES = ["bike", "pedestrian"];
+var FILTERABLE_YEARS = [2008, 2009, 2010, 2011, 2012];
+var FILTERABLE_SEXES = ["M", "F"];
+var FILTERABLE_COLLISION_TYPES = ["bike", "pedestrian"];
 var INITIAL_MAP_CENTER = [37.8044, -122.2708];
 var INITIAL_MAP_ZOOM = 13;
 var FATAL_COLOR = 'red';
@@ -181,29 +181,26 @@ function FilterDialog(element_id, map) {
 
     this.filterChanged = function() {
         var years = [];
-        for (var i = 0; i < ALL_YEARS.length; i++) {
-            var element = document.getElementById('filter_' + ALL_YEARS[i]);
+        for (var i = 0; i < FILTERABLE_YEARS.length; i++) {
+            var element = document.getElementById('filter_' + FILTERABLE_YEARS[i]);
             if (element.checked)
-                years.push(ALL_YEARS[i]);
+                years.push(FILTERABLE_YEARS[i]);
         }
 
         var sexes = [];
-        for (var i = 0; i < ALL_SEXES.length; i++) {
-            var element = document.getElementById('filter_' + ALL_SEXES[i]);
+        for (var i = 0; i < FILTERABLE_SEXES.length; i++) {
+            var element = document.getElementById('filter_' + FILTERABLE_SEXES[i]);
             if (element.checked)
-                sexes.push(ALL_SEXES[i]);
+                sexes.push(FILTERABLE_SEXES[i]);
         }
 
         var types = [];
-        for (var i = 0; i < ALL_TYPES.length; i++) {
-            var element = document.getElementById('filter_' + ALL_TYPES[i]);
+        for (var i = 0; i < FILTERABLE_COLLISION_TYPES.length; i++) {
+            var element = document.getElementById('filter_' + FILTERABLE_COLLISION_TYPES[i]);
             if (element.checked)
-                types.push(ALL_TYPES[i]);
+                types.push(FILTERABLE_COLLISION_TYPES[i]);
         }
 
-        console.log(years);
-        console.log(sexes);
-        console.log(types);
         self.map.removeAllMarkers();
         var collisionGroups = filterData(years, sexes, types);
         self.map.addCollisionGroupsToMap(collisionGroups);

@@ -76,7 +76,7 @@
         var filterDialog = new FilterDialog('filter_dialog', map);
 
         Collision.addFromJSON(data);
-        var collisionGroups = filterData(ALL_YEARS, ALL_SEXES, ALL_TYPES);
+        var collisionGroups = filterData(FILTERABLE_YEARS, FILTERABLE_SEXES, FILTERABLE_COLLISION_TYPES);
         map.addCollisionGroupsToMap(collisionGroups);
         statisticsDisplay.updateStatisticsDisplay(collisionGroups);
     </script>
