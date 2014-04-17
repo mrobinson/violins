@@ -359,15 +359,8 @@ function Map(mapElementID, collisionPopup) {
 
 function StatisticsDisplay() {
     var self = this;
-    this.sexChart = Raphael("#sexchart", "200px", "200px");
-    this.injuryChart = Raphael("#injurychart", "200px", "200px");
-    this.ageChart = Raphael("#agechart", "200px", "200px");
 
     this.updateStatisticsDisplay = function(collisionGroups) {
         var stats = new CollisionStatistics(collisionGroups);
-
-        self.sexChart.barchart(0, 0, 200, 100, stats.victimSexes, {})
-        self.injuryChart.barchart(0, 0, 200, 100, stats.victimInjuries, {})
-        self.ageChart.barchart(0, 0, 200, 100, stats.victimAges, {})
     }
 }
