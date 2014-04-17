@@ -320,7 +320,7 @@ function Map(mapElementID, collisionPopup) {
                 var collision = group[j];
                 if (collision.numberOfFatalities() > 0) {
                     color = FATAL_COLOR;
-                } else if (collision.numberOfSevereInjuries() > 0 && color != 'red') {
+                } else if (collision.numberOfSevereInjuries() > 0 && color != FATAL_COLOR) {
                     color = SEVERE_INJURY_COLOR;
                 }
             }
