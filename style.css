@@ -164,6 +164,7 @@ body {
     background-color: rgba(256, 256, 256, 0.95);
     background: rgba(256, 256, 256, 0.95);
     border-radius: 4px;
+    font-weight: bold;
 }
 
 .leaflet-popup-content {

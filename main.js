@@ -41,8 +41,12 @@ function Collision(jsonCollision) {
     this.year = this.date.getFullYear();
     this.sex = jsonCollision.sex;
     this.type = jsonCollision.type;
-    this.victims = jsonCollision.victims;
     this.location = jsonCollision.location;
+
+    this.victims = [];
+    for (var v = 0; v < jsonCollision.victims.length; v++) {
+        this.victims.push(new Victim(jsonCollision.victims[v]));
+    }
 
     this.countVictims = function(test) {
         var count = 0;
@@ -64,17 +68,7 @@ function Collision(jsonCollision) {
 
     this.getDateString = function() {
         var monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Nov', 'Dec'];
-        console.log(self.date);
         return monthNames[self.date.getMonth() - 1] + ' ' + self.date.getDate() + ', ' + self.date.getFullYear();
-    }
-
-    this.toString = function() {
-        var result = self.intersection + " " + self.date;
-        for (var v = 0; v < self.victims.length; v++) {
-            var victim = self.victims[v];
-            result += "\n" + victim.sex + " " + victim.age + " " + victim.injury;
-        }
-        return result;
     }
 }
 
@@ -85,6 +79,23 @@ Collision.addFromJSON = function(data) {
 
     for (var i = 0; i < data.length; i++) {
         Collision.collisions.push(new Collision(data[i]));
+    }
+}
+
+function Victim(victimJSON) {
+    var self = this;
+    this.injury = victimJSON.injury;
+    this.age = victimJSON.age;
+    this.sex = victimJSON.sex;
+
+    this.sexString = function() {
+        if (self.sex == "M") {
+            return "male";
+        } else if (self.sex == "F") {
+            return "female";
+        } else {
+            return "";
+        }
     }
 }
 
@@ -191,7 +202,7 @@ function CollisionPopup() {
 
             for (var v = 0; v < collision.victims.length; v++) {
                 var victim = collision.victims[v];
-                popupHTML += '<div class="victim">' + victim.age + " year old, " + victim.sex + '</div>';
+                popupHTML += '<div class="victim">' + victim.age + " year old " + victim.sexString() + '</div>';
             }
             popupHTML += '</div>';
         }
