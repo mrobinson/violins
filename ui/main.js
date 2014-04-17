@@ -23,35 +23,8 @@ var FATAL_COLOR = 'red';
 var SEVERE_INJURY_COLOR = 'purple';
 var NON_INJURY_COLOR = 'gold';
 
-if (!Array.prototype.indexOf) {
-    Array.prototype.indexOf = function (searchElement, fromIndex) {
-        if ( this === undefined || this === null ) {
-            throw new TypeError( '"this" is null or not defined' );
-        }
-
-        var length = this.length >>> 0; // Hack to convert object.length to a UInt32
-        fromIndex = +fromIndex || 0;
-
-        if (Math.abs(fromIndex) === Infinity) {
-            fromIndex = 0;
-        }
-
-        if (fromIndex < 0) {
-            fromIndex += length;
-        if (fromIndex < 0) {
-            fromIndex = 0;
-        }
-    }
-
-    for (;fromIndex < length; fromIndex++) {
-        if (this[fromIndex] === searchElement) {
-            return fromIndex;
-        }
-    }
-
-    return -1;
-    };
-}
+var DATE_FORMAT = d3.time.format('%b %e, %Y');
+var TIME_FORMAT = d3.time.format('%_I:%M%p');
 
 function Collision(jsonCollision) {
     var self = this;
@@ -86,15 +59,11 @@ function Collision(jsonCollision) {
     }
 
     this.getDateString = function() {
-        var monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-        return monthNames[self.date.getMonth()] + ' ' + self.date.getDate() + ', ' + self.date.getFullYear();
+        return DATE_FORMAT(self.date);
     }
 
     this.getTimeString = function() {
-        var minutes = String(self.date.getMinutes());
-        if (minutes.length < 2)
-            minutes = "0" + minutes;
-        return self.date.getHours() + ':' + minutes;
+        return TIME_FORMAT(self.date).toLowerCase();
     }
 }
 
