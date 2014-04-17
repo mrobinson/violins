@@ -166,6 +166,55 @@ function CollisionStatistics(collisionGroups) {
     }
 }
 
+function FilterDialog(element_id, map) {
+    var self = this;
+    this.element = document.getElementById(element_id);
+    this.map = map;
+
+    this.toggleVisibility = function() {
+        if (self.element.style.display == "block") {
+            self.element.style.display = "none";
+        } else {
+            self.element.style.display = "block";
+        }
+    }
+
+    this.filterChanged = function() {
+        var years = [];
+        for (var i = 0; i < ALL_YEARS.length; i++) {
+            var element = document.getElementById('filter_' + ALL_YEARS[i]);
+            if (element.checked)
+                years.push(ALL_YEARS[i]);
+        }
+
+        var sexes = [];
+        for (var i = 0; i < ALL_SEXES.length; i++) {
+            var element = document.getElementById('filter_' + ALL_SEXES[i]);
+            if (element.checked)
+                sexes.push(ALL_SEXES[i]);
+        }
+
+        var types = [];
+        for (var i = 0; i < ALL_TYPES.length; i++) {
+            var element = document.getElementById('filter_' + ALL_TYPES[i]);
+            if (element.checked)
+                types.push(ALL_TYPES[i]);
+        }
+
+        console.log(years);
+        console.log(sexes);
+        console.log(types);
+        self.map.removeAllMarkers();
+        var collisionGroups = filterData(years, sexes, types);
+        self.map.addCollisionGroupsToMap(collisionGroups);
+    }
+
+    var inputs = this.element.getElementsByTagName('input');
+    for (var i = 0; i < inputs.length; i++) {
+        inputs[i].onclick = this.filterChanged.bind(this);
+    }
+}
+
 function filterData(years, sexes, types) {
     var resultMap = {};
     var results = [];
@@ -220,7 +269,6 @@ function CollisionPopup() {
 
         for (var i = 0; i < collisionGroup.length; i++) {
             var collision = collisionGroup[i];
-            console.log(collision.date);
             popupHTML += '<div class="collision">';
             popupHTML += '<div class="header">';
             if (collision.type == "bike") {
@@ -256,6 +304,14 @@ function Map(mapElementID, collisionPopup) {
     this.collisionPopup = collisionPopup;
     this.map = L.map(mapElementID).setView(INITIAL_MAP_CENTER, INITIAL_MAP_ZOOM);
     this.map.addLayer(new L.StamenTileLayer('toner'));
+    this.markers = [];
+
+    this.removeAllMarkers = function() {
+        for (var i = 0; i < self.markers.length; i++) {
+            self.map.removeLayer(self.markers[i]);
+        }
+        self.markers = [];
+    }
 
     this.addCollisionGroupsToMap = function(collisionGroups) {
         for (var i = 0; i < collisionGroups.length; i++) {
@@ -281,7 +337,9 @@ function Map(mapElementID, collisionPopup) {
                 var popupText = self.collisionPopup.show(e.target.collisionGroup);
                 var popupLocation = e.target.collisionGroup[0].location;
                 var popup = L.popup().setLatLng(popupLocation).setContent(popupText).openOn(self.map);
-            }).collisionGroup = group;
+            });
+            marker.collisionGroup = group;
+            self.markers.push(marker);
         }
     }
 }
@@ -300,4 +358,3 @@ function StatisticsDisplay() {
         self.ageChart.barchart(0, 0, 200, 100, stats.victimAges, {})
     }
 }
-

@@ -35,19 +35,15 @@ body {
     z-index: 2000;
 }
 
-
-#collision_detail_popup {
+#filter_dialog {
     position: absolute;
     overflow: hidden;
-    top: 0;
-    left: 40px;
-    width; 200px
-    height: 500px
+    display: none;
+    bottom: 40px;
+    left: 5px;
     padding: 5px;
-    background-color: rgba(256, 256, 256, 0.95);
-    box-shadow: 1px 1px 10px rgba(0, 0, 0, 0.2);
+    background-color: white;
     z-index: 2000;
-    font-family: Helvetica, Arial, sans-serif;
 }
 
 #toolbar {
