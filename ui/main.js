@@ -21,6 +21,8 @@ var COLLISION_TYPE_NAMES = ['Bike', 'Ped.'];
 var AGE_GROUP_NAMES = ['0-14', '15-24', '25-49', '50-74', '75+', 'N/A'];
 var AGE_GROUP_RANGES = [14, 24, 25, 74, 150];
 
+var INJURY_NAMES = ["None", "Fatal", "Severe", "Visible", "Other"];
+
 var INITIAL_MAP_CENTER = [37.8044, -122.2708];
 var INITIAL_MAP_ZOOM = 13;
 var FATAL_COLOR = 'red';
@@ -54,21 +56,11 @@ function Collision(jsonCollision) {
         return count;
     }
 
-    this.numberOfFatalities = function() {
-        return self.countVictims(function(victim) { return victim.isFatality(); });
-    }
-
-    this.numberOfSevereInjuries = function() {
-        return self.countVictims(function(victim) { return victim.isSevereInjury(); });
-    }
-
-    this.getDateString = function() {
-        return DATE_FORMAT(self.date);
-    }
-
-    this.getTimeString = function() {
-        return TIME_FORMAT(self.date).toLowerCase();
-    }
+    this.isBikeCollision = function() { return this.type == 0; }
+    this.numberOfFatalities = function() { return self.countVictims(function(victim) { return victim.isFatality(); }); }
+    this.numberOfSevereInjuries = function() { return self.countVictims(function(victim) { return victim.isSevereInjury(); }); }
+    this.getDateString = function() { return DATE_FORMAT(self.date); }
+    this.getTimeString = function() { return TIME_FORMAT(self.date).toLowerCase(); }
 }
 
 Collision.addFromJSON = function(data) {
@@ -158,7 +150,7 @@ function CollisionPopup() {
             var collision = collisionGroup[i];
             popupHTML += '<div class="collision">';
             popupHTML += '<div class="header">';
-            if (collision.type == "bike") {
+            if (collision.isBikeCollision()) {
                 popupHTML += '<div class="symbol">&#x1f6b2;</div>';
             } else {
                 popupHTML += '<div class="symbol">&#x1f6b6;</div>';
@@ -254,6 +246,7 @@ function StatisticsDisplay() {
         var stats = new CollisionStatistics(collisions);
         self.createChart('#age_chart', stats.totalVictims, stats.ageGroupCounts, AGE_GROUP_NAMES);
         self.createChart('#sex_chart', stats.totalVictims, stats.sexCounts, SEX_NAMES);
+        self.createChart('#injury_chart', stats.totalVictims, stats.injuryCounts, INJURY_NAMES);
         self.createChart('#type_chart', stats.totalCollisions, stats.typeCounts, COLLISION_TYPE_NAMES);
         self.createChart('#year_chart', stats.totalCollisions, stats.yearCounts, FILTERABLE_YEARS);
     }
@@ -306,6 +299,7 @@ function CollisionStatistics(collisions) {
     var yearCounts = arrayOfSize(FILTERABLE_YEARS.length);
     var typeCounts = arrayOfSize(COLLISION_TYPE_NAMES.length);
     var ageGroupCounts = arrayOfSize(AGE_GROUP_NAMES.length);
+    var injuryCounts = arrayOfSize(INJURY_NAMES.length);
     var totalVictims = 0;
 
     collisions.forEach(function(collision) {
@@ -315,13 +309,15 @@ function CollisionStatistics(collisions) {
             totalVictims++;
             sexCounts[victim.sex]++;
             ageGroupCounts[victim.ageGroup]++;
+            injuryCounts[victim.injury]++;
         });
     });
 
     this.sexCounts = sexCounts;
+    this.ageGroupCounts = ageGroupCounts;
+    this.injuryCounts = injuryCounts;
     this.yearCounts = yearCounts;
     this.typeCounts = typeCounts;
-    this.ageGroupCounts = ageGroupCounts;
     this.totalVictims = totalVictims;
     this.totalCollisions = collisions.length;
 }

@@ -220,7 +220,6 @@ body {
     top: 0;
     right: 0;
     width: 250px;
-    height: 500px;
     margin: 5px;
     border-radius: 4px;
     background-color: rgba(256, 256, 256, 0.95);
@@ -228,12 +227,16 @@ body {
     z-index: 2000;
 
     padding: 10px;
-    font-family: sans-serif;
+    font-family: Arial, Helvetica, sans-serif;
     font-size: 12px;
 }
 
 #stats div {
     margin-top: 2ex;
+}
+
+#stats div:first-child {
+    margin-top: 0;
 }
 
 #stats hr {
