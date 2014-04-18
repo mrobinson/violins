@@ -160,6 +160,7 @@ body {
 .leaflet-popup-content-wrapper {
     background-color: rgba(256, 256, 256, 0.95);
     background: rgba(256, 256, 256, 0.95);
+    box-shadow: 0px 1px 5px rgba(0, 0, 0, 0.68);
     border-radius: 4px;
     font-weight: bold;
 }
@@ -222,14 +223,24 @@ body {
     height: 500px;
     margin: 5px;
     border-radius: 4px;
-    border: solid 5px black;
     background-color: rgba(256, 256, 256, 0.95);
-    box-shadow: 1px 1px 10px rgba(0, 0, 0, 0.2);
+    box-shadow: 0px 1px 5px rgba(0, 0, 0, 0.68);
     z-index: 2000;
 
     padding: 10px;
     font-family: sans-serif;
     font-size: 12px;
+}
+
+#stats div {
+    margin-top: 2ex;
+}
+
+#stats hr {
+    border: none;
+    color: black;
+    background-color: black;
+    height: 1px;
 }
 
 .chart .domain {
@@ -240,4 +251,8 @@ body {
 
 .chart line {
     stroke: none;
+}
+
+.tick text:hover {
+    text-decoration: line-through;
 }

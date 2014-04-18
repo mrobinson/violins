@@ -283,9 +283,9 @@ function StatisticsDisplay() {
                     .attr('class', 'bar')
                     .attr("transform", 'translate(' + self.leftMargin + ', 0)')
                     .attr('class', 'bar')
-                    .attr('y', function(d, i) { return yScale(names[i]) + 2; })
+                    .attr('y', function(d, i) { return yScale(names[i]) + 3; })
                     .attr('width', function(d) { return xScale(d); })
-                    .attr('height', self.heightPerGroup - 4);
+                    .attr('height', self.heightPerGroup - 6);
 
         chart.append("g")
             .attr("transform", 'translate(' + self.leftMargin + ', 0)')
