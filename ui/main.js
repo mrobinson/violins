@@ -15,8 +15,12 @@
  */
 
 var FILTERABLE_YEARS = [2008, 2009, 2010, 2011, 2012];
-var FILTERABLE_SEXES = ["M", "F"];
-var FILTERABLE_COLLISION_TYPES = ["bike", "pedestrian"];
+var SEX_NAMES = ['Female', 'Male', 'N/A'];
+var COLLISION_TYPE_NAMES = ['Bike', 'Ped.'];
+
+var AGE_GROUP_NAMES = ['0-14', '15-24', '25-49', '50-74', '75+', 'N/A'];
+var AGE_GROUP_RANGES = [14, 24, 25, 74, 150];
+
 var INITIAL_MAP_CENTER = [37.8044, -122.2708];
 var INITIAL_MAP_ZOOM = 13;
 var FATAL_COLOR = 'red';
@@ -79,18 +83,9 @@ Collision.addFromJSON = function(data) {
 
 function Victim(victimJSON) {
     var self = this;
-    this.injury = victimJSON.injury;
-    this.age = victimJSON.age;
-    this.sex = victimJSON.sex;
 
     this.sexString = function() {
-        if (self.isMale()) {
-            return "male";
-        } else if (self.isFemale()) {
-            return "female";
-        } else {
-            return "";
-        }
+        return SEX_NAMES[this.sex];
     }
 
     this.ageString = function() {
@@ -101,54 +96,21 @@ function Victim(victimJSON) {
         }
     }
 
-    this.isMale = function () { return self.sex == "M"; }
-    this.isFemale = function () { return self.sex == "F"; }
+    this.calculateAgeGroup = function() {
+        for (var i = 0; i < AGE_GROUP_RANGES.length; i++) {
+            if (self.age <= AGE_GROUP_RANGES[i])
+                return i;
+        }
+        return AGE_GROUP_RANGES.length;
+    }
+
     this.isFatality = function () { return self.injury == 1; }
     this.isSevereInjury = function () { return self.injury == 2; }
-}
 
-function CollisionStatistics(collisionGroups) {
-    var self = this;
-    this.victimInjuries = [0, 0, 0, 0, 0];
-    this.victimSexes = [0, 0, 0];
-    this.victimAges = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-    this.collisionYears = {};
-    this.yearsSeen = [];
-
-    this.processCollision = function(collision) {
-        if (self.yearsSeen.indexOf(collision.year) == -1) {
-            self.yearsSeen.push(collision.year);
-            self.collisionYears[collision.year] = 0;
-        }
-        self.collisionYears[collision.year]++;
-        for (var v = 0; v < collision.victims.length; v++) {
-            self.processVictim(collision.victims[v]);
-        }
-    }
-
-    this.processVictim = function(victim) {
-        if (victim.isFemale()) {
-            self.victimSexes[0]++;
-        } else if (victim.isMale()) {
-            self.victimSexes[1]++;
-        } else {
-            self.victimSexes[2]++;
-        }
-
-        self.victimInjuries[victim.injury]++;
-
-         // Sometimes ages are unspecified by way of very large values.
-        if (victim.age >= 0 && victim.age < 150) {
-            var ageGroup = Math.min(Math.floor(victim.age/10), self.victimAges.length - 1);
-            self.victimAges[ageGroup]++;
-        }
-    }
-
-    for (var i = 0; i < collisionGroups.length; i++) {
-        for (var j = 0; j < collisionGroups[i].length; j++) {
-            this.processCollision(collisionGroups[i][j]);
-         }
-    }
+    this.injury = victimJSON.injury;
+    this.age = victimJSON.age;
+    this.sex = victimJSON.sex;
+    this.ageGroup = this.calculateAgeGroup();
 }
 
 function FilterDialog(element_id, map) {
@@ -165,71 +127,14 @@ function FilterDialog(element_id, map) {
     }
 
     this.filterChanged = function() {
-        var years = [];
-        for (var i = 0; i < FILTERABLE_YEARS.length; i++) {
-            var element = document.getElementById('filter_' + FILTERABLE_YEARS[i]);
-            if (element.checked)
-                years.push(FILTERABLE_YEARS[i]);
-        }
-
-        var sexes = [];
-        for (var i = 0; i < FILTERABLE_SEXES.length; i++) {
-            var element = document.getElementById('filter_' + FILTERABLE_SEXES[i]);
-            if (element.checked)
-                sexes.push(FILTERABLE_SEXES[i]);
-        }
-
-        var types = [];
-        for (var i = 0; i < FILTERABLE_COLLISION_TYPES.length; i++) {
-            var element = document.getElementById('filter_' + FILTERABLE_COLLISION_TYPES[i]);
-            if (element.checked)
-                types.push(FILTERABLE_COLLISION_TYPES[i]);
-        }
-
         self.map.removeAllMarkers();
-        var collisionGroups = filterData(years, sexes, types);
-        self.map.addCollisionGroupsToMap(collisionGroups);
+        self.map.addCollisionsToMap(Collision.collisions);
     }
 
     var inputs = this.element.getElementsByTagName('input');
     for (var i = 0; i < inputs.length; i++) {
         inputs[i].onclick = this.filterChanged.bind(this);
     }
-}
-
-function filterData(years, sexes, types) {
-    var resultMap = {};
-    var results = [];
-
-    function addToResults(collision) {
-        if (resultMap[collision.intersection] == undefined) {
-            resultMap[collision.intersection] = [];
-            results.push(resultMap[collision.intersection]);
-        }
-
-        resultMap[collision.intersection].push(collision);
-    }
-
-    for (var i = 0; i < Collision.collisions.length; i++) {
-        var collision = Collision.collisions[i];
-        if (years.indexOf(collision.year) == -1)
-            continue;
-        if (types.indexOf(collision.type) == -1)
-            continue;
-
-        var foundSex = false;
-        for (var v = 0; v < collision.victims.length; v++) {
-            if (sexes.indexOf(collision.victims[v].sex) != -1) {
-                foundSex = true;
-                break;
-            }
-        }
-        if (!foundSex)
-            continue;
-
-        addToResults(collision);
-    }
-    return results;
 }
 
 function CollisionPopup() {
@@ -295,7 +200,20 @@ function Map(mapElementID, collisionPopup) {
         self.markers = [];
     }
 
-    this.addCollisionGroupsToMap = function(collisionGroups) {
+    this.groupCollisionsByIntersection = function(collision) {
+        var resultMap = d3.map();
+
+        collision.forEach(function(collision, index) {
+            if (!resultMap.has(collision.intersection))
+                resultMap.set(collision.intersection, []);
+            resultMap.get(collision.intersection).push(collision);
+        });
+
+        return resultMap.values();
+    }
+
+    this.addCollisionsToMap = function(collisions) {
+        var collisionGroups = self.groupCollisionsByIntersection(collisions);
         for (var i = 0; i < collisionGroups.length; i++) {
             var group = collisionGroups[i];
             var size = group.length > 1 ? 40 : 20;
@@ -328,8 +246,82 @@ function Map(mapElementID, collisionPopup) {
 
 function StatisticsDisplay() {
     var self = this;
+    this.width = 200;
+    this.heightPerGroup = 20;
+    this.leftMargin = 50;
 
-    this.updateStatisticsDisplay = function(collisionGroups) {
-        var stats = new CollisionStatistics(collisionGroups);
+    this.updateStatisticsDisplay = function(collisions) {
+        var stats = new CollisionStatistics(collisions);
+        self.createChart('#age_chart', stats.totalVictims, stats.ageGroupCounts, AGE_GROUP_NAMES);
+        self.createChart('#sex_chart', stats.totalVictims, stats.sexCounts, SEX_NAMES);
+        self.createChart('#type_chart', stats.totalCollisions, stats.typeCounts, COLLISION_TYPE_NAMES);
+        self.createChart('#year_chart', stats.totalCollisions, stats.yearCounts, FILTERABLE_YEARS);
     }
+
+    this.createChart = function(elementID, totalPossible, values, names) {
+        var height = names.length * self.heightPerGroup;
+        var yScale = d3.scale.ordinal()
+            .domain(names)
+            .rangeRoundBands([0, height], 0.05);
+
+        var yAxis = d3.svg.axis()
+            .orient("left")
+            .scale(yScale)
+            .tickValues(names);
+
+        var xScale = d3.scale.linear()
+            .domain([0, totalPossible])
+            .range([0, self.width - self.leftMargin]);
+
+        var chart = d3.select(elementID)
+            .attr("width", self.width)
+            .attr("height", height);
+
+        chart.selectAll('.bar')
+            .data(values)
+                .enter().append('rect')
+                    .attr('class', 'bar')
+                    .attr("transform", 'translate(' + self.leftMargin + ', 0)')
+                    .attr('class', 'bar')
+                    .attr('y', function(d, i) { return yScale(names[i]) + 2; })
+                    .attr('width', function(d) { return xScale(d); })
+                    .attr('height', self.heightPerGroup - 4);
+
+        chart.append("g")
+            .attr("transform", 'translate(' + self.leftMargin + ', 0)')
+            .call(yAxis);
+    }
+}
+
+function CollisionStatistics(collisions) {
+    var self = this;
+
+    function arrayOfSize(size) {
+        var array = Array(size);
+        while (--size != -1)
+            array[size] = 0;
+        return array;
+    }
+    var sexCounts = arrayOfSize(SEX_NAMES.length);
+    var yearCounts = arrayOfSize(FILTERABLE_YEARS.length);
+    var typeCounts = arrayOfSize(COLLISION_TYPE_NAMES.length);
+    var ageGroupCounts = arrayOfSize(AGE_GROUP_NAMES.length);
+    var totalVictims = 0;
+
+    collisions.forEach(function(collision) {
+        typeCounts[collision.type]++;
+        yearCounts[collision.year - FILTERABLE_YEARS[0]]++;
+        collision.victims.forEach(function(victim) {
+            totalVictims++;
+            sexCounts[victim.sex]++;
+            ageGroupCounts[victim.ageGroup]++;
+        });
+    });
+
+    this.sexCounts = sexCounts;
+    this.yearCounts = yearCounts;
+    this.typeCounts = typeCounts;
+    this.ageGroupCounts = ageGroupCounts;
+    this.totalVictims = totalVictims;
+    this.totalCollisions = collisions.length;
 }

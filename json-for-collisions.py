@@ -38,6 +38,20 @@ def find_all_bike_and_pedestrian_collision():
         if collision.motor_vehicle_with == 'G' or collision.motor_vehicle_with == 'B':
             yield collision
 
+def collision_type_as_number(collision):
+    if collision.motor_vehicle_with == 'B': # pedestrian
+        return 0
+    if collision.motor_vehicle_with == 'G': # bike
+        return 1
+    return 2
+
+def victim_sex_as_number(victim):
+    if victim.sex == 'F':
+        return 0
+    if victim.sex == 'M':
+        return 1
+    return 2
+
 if __name__ == "__main__":
     if len(sys.argv) < 2:
         print("Must specify city directory")
@@ -51,12 +65,12 @@ if __name__ == "__main__":
         for victim in collision.victims:
             victims.append({
                 'age': int(victim.age),
-                'sex': victim.sex,
+                'sex': victim_sex_as_number(victim),
                 'injury': int(victim.degree_of_injury),
             })
         time = calendar.timegm(datetime.datetime.strptime(collision.date + collision.time, "%Y%m%d%H%M").utctimetuple())
         data.append({
-            'type': 'bike' if collision.motor_vehicle_with == 'G' else 'pedestrian',
+            'type': collision_type_as_number(collision),
             'intersection': '{0} and {1}'.format(collision.primary_road, collision.secondary_road),
             'location': [float(collision.latitude), float(collision.longitude)],
             'time': time,

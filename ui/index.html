@@ -30,10 +30,11 @@
     </head>
 
     <body>
-        <div id="menu">
-            <div id="#sexchart" style="width: 200px; height 200px;"></div>
-            <div id="#injurychart" style="width: 200px; height 200px;"></div>
-            <div id="#agechart" style="width: 200px; height 200px;"></div>
+        <div id="stats">
+            <div>Age</div><hr/><svg class="chart" id="age_chart"></svg>
+            <div>Sex</div><hr/><svg class="chart" id="sex_chart"></svg>
+            <div>Type of collision</div><hr/><svg class="chart" id="type_chart"></svg>
+            <div>Year of collision</div><hr/><svg class="chart" id="year_chart"></svg>
         </div>
 
         <div id="toolbar">
@@ -89,8 +90,7 @@
         var filterDialog = new FilterDialog('filter_dialog', map);
 
         Collision.addFromJSON(data);
-        var collisionGroups = filterData(FILTERABLE_YEARS, FILTERABLE_SEXES, FILTERABLE_COLLISION_TYPES);
-        map.addCollisionGroupsToMap(collisionGroups);
-        statisticsDisplay.updateStatisticsDisplay(collisionGroups);
+        map.addCollisionsToMap(Collision.collisions);
+        statisticsDisplay.updateStatisticsDisplay(Collision.collisions);
     </script>
 </html>
