@@ -21,13 +21,11 @@ var COLLISION_TYPE_NAMES = ['Bike', 'Ped.'];
 var AGE_GROUP_NAMES = ['0-14', '15-24', '25-49', '50-74', '75+', 'N/A'];
 var AGE_GROUP_RANGES = [14, 24, 25, 74, 150];
 
-var INJURY_NAMES = ["None", "Fatal", "Severe", "Visible", "Other"];
+var INJURY_NAMES = ['Fatal', 'Severe', 'Visible', 'Other', 'Other'];
+var INJURY_COLORS = ['red', 'purple', 'orange', 'black', 'black'];
 
 var INITIAL_MAP_CENTER = [37.8044, -122.2708];
 var INITIAL_MAP_ZOOM = 13;
-var FATAL_COLOR = 'red';
-var SEVERE_INJURY_COLOR = 'purple';
-var NON_INJURY_COLOR = 'gold';
 
 var DATE_FORMAT = d3.time.format('%b %e, %Y');
 var TIME_FORMAT = d3.time.format('%_I:%M%p');
@@ -56,9 +54,13 @@ function Collision(jsonCollision) {
         return count;
     }
 
+    this.mostSevereInjury = function() {
+        if (self.victims.length == 0)
+            return 4;
+        return d3.min(self.victims.map(function(v) { return v.injury; }));
+    }
+
     this.isBikeCollision = function() { return this.type == 0; }
-    this.numberOfFatalities = function() { return self.countVictims(function(victim) { return victim.isFatality(); }); }
-    this.numberOfSevereInjuries = function() { return self.countVictims(function(victim) { return victim.isSevereInjury(); }); }
     this.getDateString = function() { return DATE_FORMAT(self.date); }
     this.getTimeString = function() { return TIME_FORMAT(self.date).toLowerCase(); }
 }
@@ -96,13 +98,21 @@ function Victim(victimJSON) {
         return AGE_GROUP_RANGES.length;
     }
 
-    this.isFatality = function () { return self.injury == 1; }
-    this.isSevereInjury = function () { return self.injury == 2; }
+    this.isFatality = function () { return self.injury == 0; }
+    this.isSevereInjury = function () { return self.injury == 1; }
 
     this.injury = victimJSON.injury;
     this.age = victimJSON.age;
     this.sex = victimJSON.sex;
     this.ageGroup = this.calculateAgeGroup();
+
+    // The SWITRS injury data is a bit strange, because the least severe injury
+    // is 0 and the rest increase in severity. Rework it so that the least severe
+    // is the greatest number.
+    if (this.injury == 0)
+        this.injury = 4;
+    else
+        this.injury--;
 }
 
 function FilterDialog(element_id, map) {
@@ -161,13 +171,10 @@ function CollisionPopup() {
 
             for (var v = 0; v < collision.victims.length; v++) {
                 var victim = collision.victims[v];
-                var victimString = victim.ageString() + " year old " + victim.sexString();
-                if (victim.isFatality()) {
-                    victimString += '<span style="color: ' + FATAL_COLOR + ';"> (FATAL)</span>';
-                } else if (victim.isSevereInjury()) {
-                    victimString += '<span style="color: ' + SEVERE_INJURY_COLOR + ';"> (SEVERE INJURY)</span>';
-                }
-                popupHTML += '<div class="victim">' + victimString + '</div>';
+                var victimString = victim.ageString() + ' year old, ';
+                victimString += SEX_NAMES[victim.sex] + ', ';
+                victimString += INJURY_NAMES[victim.injury] + ' injury';
+                popupHTML += '<div class="victim">' + victimString.toLowerCase() + '</div>';
             }
             popupHTML += '</div>';
         }
@@ -209,16 +216,7 @@ function Map(mapElementID, collisionPopup) {
         for (var i = 0; i < collisionGroups.length; i++) {
             var group = collisionGroups[i];
             var size = group.length > 1 ? 40 : 20;
-            var color = NON_INJURY_COLOR;
-
-            for (var j = 0; j < group.length; j++) {
-                var collision = group[j];
-                if (collision.numberOfFatalities() > 0) {
-                    color = FATAL_COLOR;
-                } else if (collision.numberOfSevereInjuries() > 0 && color != FATAL_COLOR) {
-                    color = SEVERE_INJURY_COLOR;
-                }
-            }
+            var color = INJURY_COLORS[d3.min(group.map(function(collision) { return collision.mostSevereInjury() }))];
 
             var marker = L.circle(group[0].location, size, {
                 color: color,
