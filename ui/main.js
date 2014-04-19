@@ -283,7 +283,7 @@ function StatisticsDisplay() {
             .domain(category.names)
             .rangeRoundBands([0, height], 0.05);
         var xScale = d3.scale.linear()
-            .domain([0, category.totalPossible])
+            .domain([0, d3.sum(category.counts)])
             .range([0, self.width - self.leftMargin]);
 
         var yAxis = d3.svg.axis()
@@ -341,7 +341,7 @@ function StatisticsDisplay() {
             .domain(category.names)
             .rangeRoundBands([0, height], 0.05);
         var xScale = d3.scale.linear()
-            .domain([0, category.totalPossible])
+            .domain([0, d3.sum(category.counts)])
             .range([0, self.width - self.leftMargin]);
 
         d3.select('#' + elementID)
@@ -378,20 +378,31 @@ function CollisionStatistics(collisions) {
     collisions.forEach(function(collision) {
         totalVictims += collision.victims.length;
 
-        if (YEARS.filtered.has(collision.year))
+        var yearIndex = collision.year - YEARS.values[0];
+        if (YEARS.filtered.has(yearIndex))
             return;
         if (COLLISION_TYPES.filtered.has(collision.type))
             return;
 
-        COLLISION_TYPES.counts[collision.type]++;
-        YEARS.counts[collision.year - YEARS.values[0]]++;
+        var allVictimsFiltered = collision.victims.length > 0;
         collision.victims.forEach(function(victim) {
+            if (SEXES.filtered.has(victim.sex))
+                return;
+            if (AGE_GROUPS.filtered.has(victim.ageGroup))
+                return;
+            if (INJURIES.filtered.has(victim.injury))
+                return;
+
             SEXES.counts[victim.sex]++;
             AGE_GROUPS.counts[victim.ageGroup]++;
             INJURIES.counts[victim.injury]++;
+            allVictimsFiltered = false;
         });
-    });
 
-    SEXES.totalPossible = AGE_GROUPS.totalPossible = INJURIES.totalPossible = totalVictims;
-    COLLISION_TYPES.totalPossible = YEARS.totalPossible = collisions.length;
+        if (allVictimsFiltered)
+            return;
+
+        COLLISION_TYPES.counts[collision.type]++;
+        YEARS.counts[yearIndex]++;
+    });
 }
