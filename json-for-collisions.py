@@ -52,6 +52,11 @@ def victim_sex_as_number(victim):
         return 1
     return 2
 
+def intersection_name(collision):
+    intersections = sorted([collision.primary_road, collision.secondary_road])
+    return '{0} and {1}'.format(*intersections)
+
+
 if __name__ == "__main__":
     if len(sys.argv) < 2:
         print("Must specify city directory")
@@ -71,7 +76,7 @@ if __name__ == "__main__":
         time = calendar.timegm(datetime.datetime.strptime(collision.date + collision.time, "%Y%m%d%H%M").utctimetuple())
         data.append({
             'type': collision_type_as_number(collision),
-            'intersection': '{0} and {1}'.format(collision.primary_road, collision.secondary_road),
+            'intersection': intersection_name(collision),
             'location': [float(collision.latitude), float(collision.longitude)],
             'time': time,
             'victims': victims,
