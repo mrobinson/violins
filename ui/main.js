@@ -267,30 +267,29 @@ function StatisticsDisplay() {
     this.heightPerGroup = 20;
     this.leftMargin = 50;
 
-    this.updateStatisticsDisplay = function(collisions) {
-        var stats = new CollisionStatistics(collisions);
-        self.createChart('age_chart', AGE_GROUPS);
-        self.createChart('sex_chart', SEXES);
-        self.createChart('injury_chart', INJURIES);
-        self.createChart('type_chart', COLLISION_TYPES);
-        self.createChart('year_chart', YEARS);
+    this.updateStatisticsDisplay = function() {
+        var stats = new CollisionStatistics(Collision.collisions);
+        self.updateChart('age_chart', AGE_GROUPS);
+        self.updateChart('sex_chart', SEXES);
+        self.updateChart('injury_chart', INJURIES);
+        self.updateChart('type_chart', COLLISION_TYPES);
+        self.updateChart('year_chart', YEARS);
     }
 
     this.createChart = function(elementID, category) {
-        var totalPossible = d3.sum(category.counts);
         var height = category.names.length * self.heightPerGroup;
+
         var yScale = d3.scale.ordinal()
             .domain(category.names)
             .rangeRoundBands([0, height], 0.05);
+        var xScale = d3.scale.linear()
+            .domain([0, category.totalPossible])
+            .range([0, self.width - self.leftMargin]);
 
         var yAxis = d3.svg.axis()
             .orient("left")
             .scale(yScale)
             .tickValues(category.names);
-
-        var xScale = d3.scale.linear()
-            .domain([0, totalPossible])
-            .range([0, self.width - self.leftMargin]);
 
         var chart = d3.select('#' + elementID)
             .attr("width", self.width)
@@ -315,6 +314,7 @@ function StatisticsDisplay() {
                 .classed('disabled', false)
                 .on('click', filterOut);
             category.filtered.remove(this.filterIndex);
+            self.updateStatisticsDisplay();
         }
 
         function filterOut(text, index) {
@@ -328,11 +328,36 @@ function StatisticsDisplay() {
                 .classed('disabled', true)
                 .on('click', filterIn);
             category.filtered.add(this.filterIndex);
+            self.updateStatisticsDisplay();
         }
 
         chart.selectAll('text')
             .on('click', filterOut);
     }
+
+    this.updateChart = function(elementID, category) {
+        var height = category.names.length * self.heightPerGroup;
+        var yScale = d3.scale.ordinal()
+            .domain(category.names)
+            .rangeRoundBands([0, height], 0.05);
+        var xScale = d3.scale.linear()
+            .domain([0, category.totalPossible])
+            .range([0, self.width - self.leftMargin]);
+
+        d3.select('#' + elementID)
+            .selectAll('.bar')
+                .data(category.counts)
+                    .transition()
+                        .attr('width', function(d) { return xScale(d); });
+    }
+
+    var stats = new CollisionStatistics(Collision.collisions);
+    self.createChart('age_chart', AGE_GROUPS);
+    self.createChart('sex_chart', SEXES);
+    self.createChart('injury_chart', INJURIES);
+    self.createChart('type_chart', COLLISION_TYPES);
+    self.createChart('year_chart', YEARS);
+
 }
 
 function CollisionStatistics(collisions) {
@@ -351,16 +376,22 @@ function CollisionStatistics(collisions) {
     var totalVictims = 0;
 
     collisions.forEach(function(collision) {
+        totalVictims += collision.victims.length;
+
+        if (YEARS.filtered.has(collision.year))
+            return;
+        if (COLLISION_TYPES.filtered.has(collision.type))
+            return;
+
         COLLISION_TYPES.counts[collision.type]++;
         YEARS.counts[collision.year - YEARS.values[0]]++;
         collision.victims.forEach(function(victim) {
-            totalVictims++;
             SEXES.counts[victim.sex]++;
             AGE_GROUPS.counts[victim.ageGroup]++;
             INJURIES.counts[victim.injury]++;
         });
     });
 
-    this.totalVictims = totalVictims;
-    this.totalCollisions = collisions.length;
+    SEXES.totalPossible = AGE_GROUPS.totalPossible = INJURIES.totalPossible = totalVictims;
+    COLLISION_TYPES.totalPossible = YEARS.totalPossible = collisions.length;
 }

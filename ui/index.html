@@ -87,11 +87,12 @@
 
     <script>
         var map = new Map('map', new CollisionPopup());
-        var statisticsDisplay = new StatisticsDisplay();
         var filterDialog = new FilterDialog('filter_dialog', map);
 
         Collision.addFromJSON(data);
         map.addCollisionsToMap(Collision.collisions);
-        statisticsDisplay.updateStatisticsDisplay(Collision.collisions);
+
+        var statisticsDisplay = new StatisticsDisplay();
+        //statisticsDisplay.updateStatisticsDisplay();
     </script>
 </html>
