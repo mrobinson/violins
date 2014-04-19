@@ -171,10 +171,15 @@ function CollisionPopup() {
 
             for (var v = 0; v < collision.victims.length; v++) {
                 var victim = collision.victims[v];
-                var victimString = victim.ageString() + ' year old, ';
-                victimString += SEX_NAMES[victim.sex] + ', ';
-                victimString += INJURY_NAMES[victim.injury] + ' injury';
-                popupHTML += '<div class="victim">' + victimString.toLowerCase() + '</div>';
+                var injuryString = INJURY_NAMES[victim.injury].toLowerCase();
+                var sexString = SEX_NAMES[victim.sex].toLowerCase();
+
+                popupHTML += '<div class="victim">' +
+                             '<span class="victim injury_' + injuryString +'">&#x25B6; </span>' +
+                              victim.ageString() + ' year old, ' +
+                              sexString + ', ' +
+                              injuryString + ' injury' +
+                              '</div>';
             }
             popupHTML += '</div>';
         }

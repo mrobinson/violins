@@ -19,6 +19,7 @@ html {
     height: 100%;
     width: 100%
 }
+
 body {
     margin: 0px;
     height: 100%;
@@ -26,6 +27,14 @@ body {
     font-family: Helvetica, Arial, sans-serif;
     font-weight: bold;
     font-size: 10pt;
+}
+
+.injury_fatal {
+    color: red;
+}
+
+.injury_severe {
+    color: purple;
 }
 
 #map {
