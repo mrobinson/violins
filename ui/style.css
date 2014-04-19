@@ -265,6 +265,14 @@ body {
     stroke: none;
 }
 
+.tick text {
+    cursor: pointer;
+}
+
 .tick text:hover {
+    text-decoration: line-through;
+}
+
+.tick .disabled {
     text-decoration: line-through;
 }

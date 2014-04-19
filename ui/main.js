@@ -247,11 +247,11 @@ function StatisticsDisplay() {
 
     this.updateStatisticsDisplay = function(collisions) {
         var stats = new CollisionStatistics(collisions);
-        self.createChart('#age_chart', stats.totalVictims, stats.ageGroupCounts, AGE_GROUP_NAMES);
-        self.createChart('#sex_chart', stats.totalVictims, stats.sexCounts, SEX_NAMES);
-        self.createChart('#injury_chart', stats.totalVictims, stats.injuryCounts, INJURY_NAMES);
-        self.createChart('#type_chart', stats.totalCollisions, stats.typeCounts, COLLISION_TYPE_NAMES);
-        self.createChart('#year_chart', stats.totalCollisions, stats.yearCounts, FILTERABLE_YEARS);
+        self.createChart('age_chart', stats.totalVictims, stats.ageGroupCounts, AGE_GROUP_NAMES);
+        self.createChart('sex_chart', stats.totalVictims, stats.sexCounts, SEX_NAMES);
+        self.createChart('injury_chart', stats.totalVictims, stats.injuryCounts, INJURY_NAMES);
+        self.createChart('type_chart', stats.totalCollisions, stats.typeCounts, COLLISION_TYPE_NAMES);
+        self.createChart('year_chart', stats.totalCollisions, stats.yearCounts, FILTERABLE_YEARS);
     }
 
     this.createChart = function(elementID, totalPossible, values, names) {
@@ -269,7 +269,7 @@ function StatisticsDisplay() {
             .domain([0, totalPossible])
             .range([0, self.width - self.leftMargin]);
 
-        var chart = d3.select(elementID)
+        var chart = d3.select('#' + elementID)
             .attr("width", self.width)
             .attr("height", height);
 
@@ -286,6 +286,21 @@ function StatisticsDisplay() {
         chart.append("g")
             .attr("transform", 'translate(' + self.leftMargin + ', 0)')
             .call(yAxis);
+
+        function filterIn(text, index) {
+            d3.select(this)
+                .classed('disabled', false)
+                .on('click', filterOut);
+        }
+
+        function filterOut(text, index) {
+            d3.select(this)
+                .classed('disabled', true)
+                .on('click', filterIn);
+        }
+
+        chart.selectAll('text')
+            .on('click', filterOut);
     }
 }
 
