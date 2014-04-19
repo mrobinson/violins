@@ -14,21 +14,43 @@
  * limitations under the License.
  */
 
-var FILTERABLE_YEARS = [2008, 2009, 2010, 2011, 2012];
-var SEX_NAMES = ['Female', 'Male', 'N/A'];
-var COLLISION_TYPE_NAMES = ['Bike', 'Ped.'];
-
-var AGE_GROUP_NAMES = ['0-14', '15-24', '25-49', '50-74', '75+', 'N/A'];
-var AGE_GROUP_RANGES = [14, 24, 25, 74, 150];
-
-var INJURY_NAMES = ['Fatal', 'Severe', 'Visible', 'Other', 'Other'];
-var INJURY_COLORS = ['red', 'purple', 'orange', 'black', 'black'];
-
 var INITIAL_MAP_CENTER = [37.8044, -122.2708];
 var INITIAL_MAP_ZOOM = 13;
-
 var DATE_FORMAT = d3.time.format('%b %e, %Y');
 var TIME_FORMAT = d3.time.format('%_I:%M%p');
+
+var YEARS = {
+    values: [2008, 2009, 2010, 2011, 2012],
+    names: ['2008', '2009', '2010', '2011', '2012'],
+    counts: [0, 0, 0, 0, 0],
+    filtered: d3.set(),
+}
+
+var SEXES = {
+    names: ['Female', 'Male', 'N/A'],
+    counts: [0, 0, 0],
+    filtered: d3.set(),
+}
+
+var COLLISION_TYPES = {
+    names: ['Bike', 'Ped.'],
+    counts: [0, 0],
+    filtered: d3.set(),
+}
+
+var AGE_GROUPS = {
+    ranges: [14, 24, 25, 74, 150],
+    names: ['0-14', '15-24', '25-49', '50-74', '75+', 'N/A'],
+    counts: [0, 0, 0, 0, 0, 0],
+    filtered: d3.set(),
+}
+
+var INJURIES = {
+    names: ['Fatal', 'Severe', 'Visible', 'Other', 'Other'],
+    colors: ['red', 'purple', 'orange', 'black', 'black'],
+    counts: [0, 0, 0, 0, 0],
+    filtered: d3.set(),
+}
 
 function Collision(jsonCollision) {
     var self = this;
@@ -79,7 +101,7 @@ function Victim(victimJSON) {
     var self = this;
 
     this.sexString = function() {
-        return SEX_NAMES[this.sex];
+        return SEXES.names[this.sex];
     }
 
     this.ageString = function() {
@@ -91,11 +113,11 @@ function Victim(victimJSON) {
     }
 
     this.calculateAgeGroup = function() {
-        for (var i = 0; i < AGE_GROUP_RANGES.length; i++) {
-            if (self.age <= AGE_GROUP_RANGES[i])
+        for (var i = 0; i < AGE_GROUPS.ranges.length; i++) {
+            if (self.age <= AGE_GROUPS.ranges[i])
                 return i;
         }
-        return AGE_GROUP_RANGES.length;
+        return AGE_GROUPS.ranges.length;
     }
 
     this.isFatality = function () { return self.injury == 0; }
@@ -171,8 +193,8 @@ function CollisionPopup() {
 
             for (var v = 0; v < collision.victims.length; v++) {
                 var victim = collision.victims[v];
-                var injuryString = INJURY_NAMES[victim.injury].toLowerCase();
-                var sexString = SEX_NAMES[victim.sex].toLowerCase();
+                var injuryString = INJURIES.names[victim.injury].toLowerCase();
+                var sexString = SEXES.names[victim.sex].toLowerCase();
 
                 popupHTML += '<div class="victim">' +
                              '<span class="victim injury_' + injuryString +'">&#x25B6; </span>' +
@@ -221,7 +243,7 @@ function Map(mapElementID, collisionPopup) {
         for (var i = 0; i < collisionGroups.length; i++) {
             var group = collisionGroups[i];
             var size = group.length > 1 ? 40 : 20;
-            var color = INJURY_COLORS[d3.min(group.map(function(collision) { return collision.mostSevereInjury() }))];
+            var color = INJURIES.colors[d3.min(group.map(function(collision) { return collision.mostSevereInjury() }))];
 
             var marker = L.circle(group[0].location, size, {
                 color: color,
@@ -247,23 +269,24 @@ function StatisticsDisplay() {
 
     this.updateStatisticsDisplay = function(collisions) {
         var stats = new CollisionStatistics(collisions);
-        self.createChart('age_chart', stats.totalVictims, stats.ageGroupCounts, AGE_GROUP_NAMES);
-        self.createChart('sex_chart', stats.totalVictims, stats.sexCounts, SEX_NAMES);
-        self.createChart('injury_chart', stats.totalVictims, stats.injuryCounts, INJURY_NAMES);
-        self.createChart('type_chart', stats.totalCollisions, stats.typeCounts, COLLISION_TYPE_NAMES);
-        self.createChart('year_chart', stats.totalCollisions, stats.yearCounts, FILTERABLE_YEARS);
+        self.createChart('age_chart', AGE_GROUPS);
+        self.createChart('sex_chart', SEXES);
+        self.createChart('injury_chart', INJURIES);
+        self.createChart('type_chart', COLLISION_TYPES);
+        self.createChart('year_chart', YEARS);
     }
 
-    this.createChart = function(elementID, totalPossible, values, names) {
-        var height = names.length * self.heightPerGroup;
+    this.createChart = function(elementID, category) {
+        var totalPossible = d3.sum(category.counts);
+        var height = category.names.length * self.heightPerGroup;
         var yScale = d3.scale.ordinal()
-            .domain(names)
+            .domain(category.names)
             .rangeRoundBands([0, height], 0.05);
 
         var yAxis = d3.svg.axis()
             .orient("left")
             .scale(yScale)
-            .tickValues(names);
+            .tickValues(category.names);
 
         var xScale = d3.scale.linear()
             .domain([0, totalPossible])
@@ -274,12 +297,12 @@ function StatisticsDisplay() {
             .attr("height", height);
 
         chart.selectAll('.bar')
-            .data(values)
+            .data(category.counts)
                 .enter().append('rect')
                     .attr('class', 'bar')
                     .attr("transform", 'translate(' + self.leftMargin + ', 0)')
                     .attr('class', 'bar')
-                    .attr('y', function(d, i) { return yScale(names[i]) + 3; })
+                    .attr('y', function(d, i) { return yScale(category.names[i]) + 3; })
                     .attr('width', function(d) { return xScale(d); })
                     .attr('height', self.heightPerGroup - 6);
 
@@ -291,12 +314,20 @@ function StatisticsDisplay() {
             d3.select(this)
                 .classed('disabled', false)
                 .on('click', filterOut);
+            category.filtered.remove(this.filterIndex);
         }
 
         function filterOut(text, index) {
+            // The index here is the index of the original selection. When we set the
+            // onclick handler again, the index will be 0 in fitlerIn, because there
+            // is only one element in the selection. We preserve the original index
+            // as an attribute here.
+            if (this.filterIndex === undefined)
+                this.filterIndex = index;
             d3.select(this)
                 .classed('disabled', true)
                 .on('click', filterIn);
+            category.filtered.add(this.filterIndex);
         }
 
         chart.selectAll('text')
@@ -307,35 +338,29 @@ function StatisticsDisplay() {
 function CollisionStatistics(collisions) {
     var self = this;
 
-    function arrayOfSize(size) {
-        var array = Array(size);
-        while (--size != -1)
-            array[size] = 0;
-        return array;
+    function resetCategoryCounts(category) {
+        for (var i = 0; i < category.counts.length; i++)
+            category.counts[i] = 0;
     }
-    var sexCounts = arrayOfSize(SEX_NAMES.length);
-    var yearCounts = arrayOfSize(FILTERABLE_YEARS.length);
-    var typeCounts = arrayOfSize(COLLISION_TYPE_NAMES.length);
-    var ageGroupCounts = arrayOfSize(AGE_GROUP_NAMES.length);
-    var injuryCounts = arrayOfSize(INJURY_NAMES.length);
+
+    resetCategoryCounts(SEXES);
+    resetCategoryCounts(YEARS);
+    resetCategoryCounts(COLLISION_TYPES);
+    resetCategoryCounts(AGE_GROUPS);
+    resetCategoryCounts(INJURIES);
     var totalVictims = 0;
 
     collisions.forEach(function(collision) {
-        typeCounts[collision.type]++;
-        yearCounts[collision.year - FILTERABLE_YEARS[0]]++;
+        COLLISION_TYPES.counts[collision.type]++;
+        YEARS.counts[collision.year - YEARS.values[0]]++;
         collision.victims.forEach(function(victim) {
             totalVictims++;
-            sexCounts[victim.sex]++;
-            ageGroupCounts[victim.ageGroup]++;
-            injuryCounts[victim.injury]++;
+            SEXES.counts[victim.sex]++;
+            AGE_GROUPS.counts[victim.ageGroup]++;
+            INJURIES.counts[victim.injury]++;
         });
     });
 
-    this.sexCounts = sexCounts;
-    this.ageGroupCounts = ageGroupCounts;
-    this.injuryCounts = injuryCounts;
-    this.yearCounts = yearCounts;
-    this.typeCounts = typeCounts;
     this.totalVictims = totalVictims;
     this.totalCollisions = collisions.length;
 }
