@@ -317,7 +317,6 @@ function Map(mapElementID, collisionPopup) {
 function StatisticsDisplay(map) {
     var self = this;
     self.map = map;
-    this.width = 200;
     this.heightPerGroup = 20;
     this.leftMargin = 50;
 
@@ -328,6 +327,7 @@ function StatisticsDisplay(map) {
     }
 
     this.createChart = function(category) {
+        var width = document.getElementById(category.chart_id).availWidth;
         var height = category.names.length * self.heightPerGroup;
 
         var yScale = d3.scale.ordinal()
@@ -336,7 +336,7 @@ function StatisticsDisplay(map) {
 
         var xScale = d3.scale.linear()
             .domain([0, d3.sum(category.counts)])
-            .range([0, self.width - self.leftMargin]);
+            .range([0, width - self.leftMargin]);
 
         var yAxis = d3.svg.axis()
             .orient("left")
@@ -344,7 +344,7 @@ function StatisticsDisplay(map) {
             .tickValues(category.names);
 
         var chart = d3.select('#' + category.chart_id)
-            .attr("width", self.width)
+            .attr("width", width)
             .attr("height", height);
 
         chart.selectAll('.bar')
@@ -388,9 +388,10 @@ function StatisticsDisplay(map) {
     }
 
     this.updateChart = function(category) {
+        var width = document.getElementById(category.chart_id).clientWidth;
         var xScale = d3.scale.linear()
             .domain([0, d3.sum(category.counts)])
-            .range([0, self.width - self.leftMargin]);
+            .range([0, width - self.leftMargin]);
 
         d3.select('#' + category.chart_id)
             .selectAll('.bar')

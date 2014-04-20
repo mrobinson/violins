@@ -228,7 +228,7 @@ body {
     overflow: hidden;
     top: 0;
     right: 0;
-    width: 250px;
+    width: 300px;
     margin: 5px;
     border-radius: 4px;
     background-color: rgba(256, 256, 256, 0.95);
@@ -240,12 +240,14 @@ body {
     font-size: 12px;
 }
 
-#stats div {
-    margin-top: 2ex;
+#stats td {
+    padding: 3px;
+    width: 150px;
+    vertical-align: top;
 }
 
 #stats div:first-child {
-    margin-top: 0;
+    width: 275px;
 }
 
 #stats hr {
