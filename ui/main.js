@@ -329,13 +329,14 @@ function StatisticsDisplay(map) {
     this.createChart = function(category) {
         var width = document.getElementById(category.chart_id).availWidth;
         var height = category.names.length * self.heightPerGroup;
+        var sumOfCounts = d3.sum(category.counts);
 
         var yScale = d3.scale.ordinal()
             .domain(category.names)
             .rangeRoundBands([0, height], 0.05);
 
         var xScale = d3.scale.linear()
-            .domain([0, d3.sum(category.counts)])
+            .domain([0, sumOfCounts])
             .range([0, width - self.leftMargin]);
 
         var yAxis = d3.svg.axis()
@@ -354,7 +355,10 @@ function StatisticsDisplay(map) {
                     .attr("transform", 'translate(' + self.leftMargin + ', 0)')
                     .attr('class', 'bar')
                     .attr('y', function(d, i) { return yScale(category.names[i]) + 3; })
-                    .attr('width', function(d) { return xScale(d); })
+                    .attr('width', function(d) {
+                        if (sumOfCounts == 0)
+                            return 0;
+                        return xScale(d); })
                     .attr('height', self.heightPerGroup - 6);
 
         chart.append("g")
@@ -389,15 +393,19 @@ function StatisticsDisplay(map) {
 
     this.updateChart = function(category) {
         var width = document.getElementById(category.chart_id).clientWidth;
+        var sumOfCounts = d3.sum(category.counts);
         var xScale = d3.scale.linear()
-            .domain([0, d3.sum(category.counts)])
+            .domain([0, sumOfCounts])
             .range([0, width - self.leftMargin]);
 
         d3.select('#' + category.chart_id)
             .selectAll('.bar')
                 .data(category.counts)
                     .transition()
-                        .attr('width', function(d) { return xScale(d); });
+                    .attr('width', function(d) {
+                        if (sumOfCounts == 0)
+                            return 0;
+                        return xScale(d); });
     }
 
     ALL_CATEGORIES.forEach(function(category) {
