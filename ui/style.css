@@ -238,12 +238,7 @@ body {
 
 #stats td {
     padding: 3px;
-    width: 150px;
     vertical-align: top;
-}
-
-#stats div:first-child {
-    width: 275px;
 }
 
 #stats hr {

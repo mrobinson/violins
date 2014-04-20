@@ -19,12 +19,16 @@ var INITIAL_MAP_ZOOM = 13;
 var DATE_FORMAT = d3.time.format('%b %e, %Y');
 var TIME_FORMAT = d3.time.format('%_I:%M%p');
 
+var HALF_STAT_WIDTH = 140; // This is a bit of a hack to avoid a lot of calls to offsetWidth;
+var STAT_WIDTH = 275;
+
 var YEARS = {
     values: [2008, 2009, 2010, 2011, 2012],
     names: ['2008', '2009', '2010', '2011', '2012'],
     counts: [0, 0, 0, 0, 0],
     filtered: d3.set(),
     chart_id: 'year_chart',
+    chart_width: STAT_WIDTH,
 }
 
 var SEXES = {
@@ -32,6 +36,7 @@ var SEXES = {
     counts: [0, 0, 0],
     filtered: d3.set(),
     chart_id: 'sex_chart',
+    chart_width: HALF_STAT_WIDTH,
 }
 
 var COLLISION_TYPES = {
@@ -39,6 +44,7 @@ var COLLISION_TYPES = {
     counts: [0, 0],
     filtered: d3.set(),
     chart_id: 'type_chart',
+    chart_width: HALF_STAT_WIDTH,
 }
 
 var AGE_GROUPS = {
@@ -47,6 +53,7 @@ var AGE_GROUPS = {
     counts: [0, 0, 0, 0, 0, 0],
     filtered: d3.set(),
     chart_id: 'age_chart',
+    chart_width: HALF_STAT_WIDTH,
 }
 
 var INJURIES = {
@@ -55,6 +62,7 @@ var INJURIES = {
     counts: [0, 0, 0, 0, 0],
     filtered: d3.set(),
     chart_id: 'injury_chart',
+    chart_width: HALF_STAT_WIDTH,
 }
 
 var ALL_CATEGORIES = [YEARS, SEXES, COLLISION_TYPES, AGE_GROUPS, INJURIES];
@@ -357,7 +365,7 @@ function StatisticsDisplay(map) {
     }
 
     this.createChart = function(category) {
-        var width = document.getElementById(category.chart_id).availWidth;
+        var width = category.chart_width;
         var height = category.names.length * self.heightPerGroup;
         var sumOfCounts = d3.sum(category.counts);
 
@@ -422,11 +430,10 @@ function StatisticsDisplay(map) {
     }
 
     this.updateChart = function(category) {
-        var width = document.getElementById(category.chart_id).clientWidth;
         var sumOfCounts = d3.sum(category.counts);
         var xScale = d3.scale.linear()
             .domain([0, sumOfCounts])
-            .range([0, width - self.leftMargin]);
+            .range([0, category.chart_width - self.leftMargin]);
 
         d3.select('#' + category.chart_id)
             .selectAll('.bar')
