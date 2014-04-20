@@ -251,8 +251,11 @@ function Map(mapElementID, collisionPopup) {
     var self = this;
     this.collisionPopup = collisionPopup;
     this.map = L.map(mapElementID).setView(INITIAL_MAP_CENTER, INITIAL_MAP_ZOOM);
-    this.map.addLayer(new L.StamenTileLayer('toner'));
     this.markers = [];
+
+    // This allows testing offline without tiles.
+    if (L.StamenTileLayer !== undefined)
+        this.map.addLayer(new L.StamenTileLayer('toner'));
 
     this.removeAllMarkers = function() {
         for (var i = 0; i < self.markers.length; i++) {
