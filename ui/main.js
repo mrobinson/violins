@@ -275,9 +275,13 @@ function Map(mapElementID, collisionPopup) {
 
     this.addCollisionsToMap = function(collisions) {
         var collisionGroups = self.groupCollisionsByIntersection(collisions);
+        var map = self.map;
+        var smallMarkers = [];
+
         for (var i = 0; i < collisionGroups.length; i++) {
             var group = collisionGroups[i];
-            var size = group.length > 1 ? 80 : 40;
+            var smallMarker = group.length > 1;
+            var size = smallMarker ? 40 : 80;
             var color = INJURIES.colors[d3.min(group.map(function(collision) { return collision.mostSevereInjury() }))];
 
             var marker = L.circle(group[0].location, size, {
@@ -286,14 +290,23 @@ function Map(mapElementID, collisionPopup) {
                 fillColor: color,
                 fillOpacity: 0.7,
                 opacity: 1.0,
-            }).addTo(self.map).on('click', function(e) {
+            }).on('click', function(e) {
                 var popupText = self.collisionPopup.show(e.target.collisionGroup);
                 var popupLocation = e.target.collisionGroup[0].location;
                 var popup = L.popup().setLatLng(popupLocation).setContent(popupText).openOn(self.map);
             });
             marker.collisionGroup = group;
             self.markers.push(marker);
+
+            if (!smallMarker)
+                marker.addTo(map).
+            else
+                smallMarkers.push(marker);
         }
+
+        smallMarkers.forEach(function(marker) {
+            marker.addTo(map);
+        });
     }
 }
 
