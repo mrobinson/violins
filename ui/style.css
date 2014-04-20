@@ -269,10 +269,8 @@ body {
     cursor: pointer;
 }
 
-.tick text:hover {
-    text-decoration: line-through;
-}
-
+.tick text:hover,
 .tick .disabled {
     text-decoration: line-through;
+    fill: grey;
 }

@@ -46,7 +46,7 @@ var AGE_GROUPS = {
 }
 
 var INJURIES = {
-    names: ['Fatal', 'Severe', 'Visible', 'Other', 'Other'],
+    names: ['Fatal', 'Severe', 'Visible', 'Pain', 'Other'],
     colors: ['red', 'purple', 'orange', 'black', 'black'],
     counts: [0, 0, 0, 0, 0],
     filtered: d3.set(),
@@ -282,6 +282,7 @@ function StatisticsDisplay() {
         var yScale = d3.scale.ordinal()
             .domain(category.names)
             .rangeRoundBands([0, height], 0.05);
+
         var xScale = d3.scale.linear()
             .domain([0, d3.sum(category.counts)])
             .range([0, self.width - self.leftMargin]);
@@ -336,10 +337,6 @@ function StatisticsDisplay() {
     }
 
     this.updateChart = function(elementID, category) {
-        var height = category.names.length * self.heightPerGroup;
-        var yScale = d3.scale.ordinal()
-            .domain(category.names)
-            .rangeRoundBands([0, height], 0.05);
         var xScale = d3.scale.linear()
             .domain([0, d3.sum(category.counts)])
             .range([0, self.width - self.leftMargin]);
