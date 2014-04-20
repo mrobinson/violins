@@ -24,18 +24,21 @@ var YEARS = {
     names: ['2008', '2009', '2010', '2011', '2012'],
     counts: [0, 0, 0, 0, 0],
     filtered: d3.set(),
+    chart_id: 'year_chart',
 }
 
 var SEXES = {
     names: ['Female', 'Male', 'N/A'],
     counts: [0, 0, 0],
     filtered: d3.set(),
+    chart_id: 'sex_chart',
 }
 
 var COLLISION_TYPES = {
     names: ['Bike', 'Ped.'],
     counts: [0, 0],
     filtered: d3.set(),
+    chart_id: 'type_chart',
 }
 
 var AGE_GROUPS = {
@@ -43,6 +46,7 @@ var AGE_GROUPS = {
     names: ['0-14', '15-24', '25-49', '50-74', '75+', 'N/A'],
     counts: [0, 0, 0, 0, 0, 0],
     filtered: d3.set(),
+    chart_id: 'age_chart',
 }
 
 var INJURIES = {
@@ -50,7 +54,10 @@ var INJURIES = {
     colors: ['red', 'purple', 'orange', 'black', 'black'],
     counts: [0, 0, 0, 0, 0],
     filtered: d3.set(),
+    chart_id: 'injury_chart',
 }
+
+var ALL_CATEGORIES = [YEARS, SEXES, COLLISION_TYPES, AGE_GROUPS, INJURIES];
 
 function updateAfterFilterChange() {
     Collision.updateFilteredStatistics();
@@ -110,16 +117,10 @@ Collision.addFromJSON = function(data) {
 }
 
 Collision.updateFilteredStatistics = function() {
-    function resetCategoryCounts(category) {
+    ALL_CATEGORIES.forEach(function(category) {
         for (var i = 0; i < category.counts.length; i++)
             category.counts[i] = 0;
-    }
-
-    resetCategoryCounts(SEXES);
-    resetCategoryCounts(YEARS);
-    resetCategoryCounts(COLLISION_TYPES);
-    resetCategoryCounts(AGE_GROUPS);
-    resetCategoryCounts(INJURIES);
+    });
 
     var totalVictims = 0;
     Collision.filteredCollisions = [];
@@ -321,14 +322,12 @@ function StatisticsDisplay(map) {
     this.leftMargin = 50;
 
     this.update = function() {
-        self.updateChart('age_chart', AGE_GROUPS);
-        self.updateChart('sex_chart', SEXES);
-        self.updateChart('injury_chart', INJURIES);
-        self.updateChart('type_chart', COLLISION_TYPES);
-        self.updateChart('year_chart', YEARS);
+        ALL_CATEGORIES.forEach(function(category) {
+            self.updateChart(category);
+        });
     }
 
-    this.createChart = function(elementID, category) {
+    this.createChart = function(category) {
         var height = category.names.length * self.heightPerGroup;
 
         var yScale = d3.scale.ordinal()
@@ -344,7 +343,7 @@ function StatisticsDisplay(map) {
             .scale(yScale)
             .tickValues(category.names);
 
-        var chart = d3.select('#' + elementID)
+        var chart = d3.select('#' + category.chart_id)
             .attr("width", self.width)
             .attr("height", height);
 
@@ -388,21 +387,19 @@ function StatisticsDisplay(map) {
             .on('click', filterOut);
     }
 
-    this.updateChart = function(elementID, category) {
+    this.updateChart = function(category) {
         var xScale = d3.scale.linear()
             .domain([0, d3.sum(category.counts)])
             .range([0, self.width - self.leftMargin]);
 
-        d3.select('#' + elementID)
+        d3.select('#' + category.chart_id)
             .selectAll('.bar')
                 .data(category.counts)
                     .transition()
                         .attr('width', function(d) { return xScale(d); });
     }
 
-    self.createChart('age_chart', AGE_GROUPS);
-    self.createChart('sex_chart', SEXES);
-    self.createChart('injury_chart', INJURIES);
-    self.createChart('type_chart', COLLISION_TYPES);
-    self.createChart('year_chart', YEARS);
+    ALL_CATEGORIES.forEach(function(category) {
+        self.createChart(category);
+    });
 }
