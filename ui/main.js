@@ -285,7 +285,7 @@ function Map(mapElementID, collisionPopup) {
         for (var i = 0; i < collisionGroups.length; i++) {
             var group = collisionGroups[i];
             var smallMarker = group.length > 1;
-            var size = smallMarker ? 40 : 80;
+            var size = smallMarker ? 60 : 80;
             var color = INJURIES.colors[d3.min(group.map(function(collision) { return collision.mostSevereInjury() }))];
 
             var marker = L.circle(group[0].location, size, {
