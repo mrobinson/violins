@@ -80,20 +80,25 @@ function Collision(jsonCollision) {
         this.victims.push(new Victim(jsonCollision.victims[v]));
     }
 
-    this.countVictims = function(test) {
-        var count = 0;
-        for (var v = 0; v < self.victims.length; v++) {
-            if (test(self.victims[v])) {
-                count++;
-            }
-        }
-        return count;
+    this.mostSevereInjury = function() {
+        var unfilteredVictims = self.getUnfilteredVictims();
+        if (unfilteredVictims.length == 0)
+            return 4;
+        return d3.min(unfilteredVictims.map(function(v) { return v.injury; }));
     }
 
-    this.mostSevereInjury = function() {
-        if (self.victims.length == 0)
-            return 4;
-        return d3.min(self.victims.map(function(v) { return v.injury; }));
+    this.getUnfilteredVictims = function() {
+        var unfilteredVictims = [];
+        self.victims.forEach(function(victim) {
+            if (SEXES.filtered.has(victim.sex))
+                return;
+            if (AGE_GROUPS.filtered.has(victim.ageGroup))
+                return;
+            if (INJURIES.filtered.has(victim.injury))
+                return;
+            unfilteredVictims.push(victim);
+        });
+        return unfilteredVictims;
     }
 
     this.isBikeCollision = function() { return this.type == 0; }
@@ -122,11 +127,8 @@ Collision.updateFilteredStatistics = function() {
             category.counts[i] = 0;
     });
 
-    var totalVictims = 0;
     Collision.filteredCollisions = [];
     Collision.collisions.forEach(function(collision) {
-        totalVictims += collision.victims.length;
-
         var yearIndex = collision.year - YEARS.values[0];
         if (YEARS.filtered.has(yearIndex))
             return;
@@ -134,14 +136,7 @@ Collision.updateFilteredStatistics = function() {
             return;
 
         var allVictimsFiltered = collision.victims.length > 0;
-        collision.victims.forEach(function(victim) {
-            if (SEXES.filtered.has(victim.sex))
-                return;
-            if (AGE_GROUPS.filtered.has(victim.ageGroup))
-                return;
-            if (INJURIES.filtered.has(victim.injury))
-                return;
-
+        collision.getUnfilteredVictims().forEach(function(victim) {
             SEXES.counts[victim.sex]++;
             AGE_GROUPS.counts[victim.ageGroup]++;
             INJURIES.counts[victim.injury]++;
@@ -227,8 +222,9 @@ function CollisionPopup() {
             popupHTML += '<div class="time">' + collision.getTimeString() + '</div>';
             popupHTML += '</div>';
 
-            for (var v = 0; v < collision.victims.length; v++) {
-                var victim = collision.victims[v];
+            var unfilteredVictims = collision.getUnfilteredVictims();
+            for (var v = 0; v < unfilteredVictims.length; v++) {
+                var victim = unfilteredVictims[v];
                 var injuryString = INJURIES.names[victim.injury].toLowerCase();
                 var sexString = SEXES.names[victim.sex].toLowerCase();
 
