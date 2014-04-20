@@ -51,10 +51,8 @@
 
     <script>
         var map = new Map('map', new CollisionPopup());
+        var statisticsDisplay = new StatisticsDisplay(map);
 
         Collision.addFromJSON(data);
-        map.addCollisionsToMap(Collision.getFilteredCollisions());
-
-        var statisticsDisplay = new StatisticsDisplay(map);
     </script>
 </html>

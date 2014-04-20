@@ -52,6 +52,13 @@ var INJURIES = {
     filtered: d3.set(),
 }
 
+function updateAfterFilterChange() {
+    Collision.updateFilteredStatistics();
+    map.removeAllMarkers();
+    map.addCollisionsToMap(Collision.filteredCollisions);
+    statisticsDisplay.update();
+}
+
 function Collision(jsonCollision) {
     var self = this;
     this.intersection = jsonCollision.intersection;
@@ -95,9 +102,14 @@ Collision.addFromJSON = function(data) {
     for (var i = 0; i < data.length; i++) {
         Collision.collisions.push(new Collision(data[i]));
     }
+
+    // TODO: Eventually we should only filter and add the new collisions for performance reasons.
+    Collision.updateFilteredStatistics();
+    map.addCollisionsToMap(Collision.filteredCollisions);
+    statisticsDisplay.update();
 }
 
-Collision.getFilteredCollisions = function() {
+Collision.updateFilteredStatistics = function() {
     function resetCategoryCounts(category) {
         for (var i = 0; i < category.counts.length; i++)
             category.counts[i] = 0;
@@ -110,7 +122,7 @@ Collision.getFilteredCollisions = function() {
     resetCategoryCounts(INJURIES);
 
     var totalVictims = 0;
-    var filteredCollisions = [];
+    Collision.filteredCollisions = [];
     Collision.collisions.forEach(function(collision) {
         totalVictims += collision.victims.length;
 
@@ -140,10 +152,8 @@ Collision.getFilteredCollisions = function() {
 
         COLLISION_TYPES.counts[collision.type]++;
         YEARS.counts[yearIndex]++;
-        filteredCollisions.push(collision);
+        Collision.filteredCollisions.push(collision);
     });
-
-    return filteredCollisions;
 }
 
 function Victim(victimJSON) {
@@ -293,7 +303,7 @@ function StatisticsDisplay(map) {
     this.heightPerGroup = 20;
     this.leftMargin = 50;
 
-    this.updateStatisticsDisplay = function() {
+    this.update = function() {
         self.updateChart('age_chart', AGE_GROUPS);
         self.updateChart('sex_chart', SEXES);
         self.updateChart('injury_chart', INJURIES);
@@ -340,10 +350,7 @@ function StatisticsDisplay(map) {
                 .classed('disabled', false)
                 .on('click', filterOut);
             category.filtered.remove(this.filterIndex);
-
-            self.map.removeAllMarkers();
-            self.map.addCollisionsToMap(Collision.getFilteredCollisions());
-            self.updateStatisticsDisplay();
+            updateAfterFilterChange();
         }
 
         function filterOut(text, index) {
@@ -357,10 +364,7 @@ function StatisticsDisplay(map) {
                 .classed('disabled', true)
                 .on('click', filterIn);
             category.filtered.add(this.filterIndex);
-
-            self.map.removeAllMarkers();
-            self.map.addCollisionsToMap(Collision.getFilteredCollisions());
-            self.updateStatisticsDisplay();
+            updateAfterFilterChange();
         }
 
         chart.selectAll('text')
