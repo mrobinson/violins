@@ -277,13 +277,14 @@ function Map(mapElementID, collisionPopup) {
         var collisionGroups = self.groupCollisionsByIntersection(collisions);
         for (var i = 0; i < collisionGroups.length; i++) {
             var group = collisionGroups[i];
-            var size = group.length > 1 ? 40 : 20;
+            var size = group.length > 1 ? 80 : 40;
             var color = INJURIES.colors[d3.min(group.map(function(collision) { return collision.mostSevereInjury() }))];
 
             var marker = L.circle(group[0].location, size, {
+                stroke: false,
                 color: color,
                 fillColor: color,
-                fillOpacity: 1.0,
+                fillOpacity: 0.7,
                 opacity: 1.0,
             }).addTo(self.map).on('click', function(e) {
                 var popupText = self.collisionPopup.show(e.target.collisionGroup);
