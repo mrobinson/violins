@@ -186,28 +186,6 @@ function Victim(victimJSON) {
         this.injury--;
 }
 
-function FilterDialog(element_id, map) {
-    var self = this;
-    this.element = document.getElementById(element_id);
-    this.map = map;
-
-    this.toggleVisibility = function() {
-        if (self.element.style.display == "block") {
-            self.element.style.display = "none";
-        } else {
-            self.element.style.display = "block";
-        }
-    }
-
-    this.filterChanged = function() {
-    }
-
-    var inputs = this.element.getElementsByTagName('input');
-    for (var i = 0; i < inputs.length; i++) {
-        inputs[i].onclick = this.filterChanged.bind(this);
-    }
-}
-
 function CollisionPopup() {
     var self = this;
 
@@ -401,14 +379,9 @@ function StatisticsDisplay(map) {
                         .attr('width', function(d) { return xScale(d); });
     }
 
-    var stats = new CollisionStatistics(Collision.collisions);
     self.createChart('age_chart', AGE_GROUPS);
     self.createChart('sex_chart', SEXES);
     self.createChart('injury_chart', INJURIES);
     self.createChart('type_chart', COLLISION_TYPES);
     self.createChart('year_chart', YEARS);
-
-}
-
-function CollisionStatistics(collisions) {
 }
