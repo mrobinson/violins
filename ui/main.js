@@ -97,6 +97,55 @@ Collision.addFromJSON = function(data) {
     }
 }
 
+Collision.getFilteredCollisions = function() {
+    function resetCategoryCounts(category) {
+        for (var i = 0; i < category.counts.length; i++)
+            category.counts[i] = 0;
+    }
+
+    resetCategoryCounts(SEXES);
+    resetCategoryCounts(YEARS);
+    resetCategoryCounts(COLLISION_TYPES);
+    resetCategoryCounts(AGE_GROUPS);
+    resetCategoryCounts(INJURIES);
+
+    var totalVictims = 0;
+    var filteredCollisions = [];
+    Collision.collisions.forEach(function(collision) {
+        totalVictims += collision.victims.length;
+
+        var yearIndex = collision.year - YEARS.values[0];
+        if (YEARS.filtered.has(yearIndex))
+            return;
+        if (COLLISION_TYPES.filtered.has(collision.type))
+            return;
+
+        var allVictimsFiltered = collision.victims.length > 0;
+        collision.victims.forEach(function(victim) {
+            if (SEXES.filtered.has(victim.sex))
+                return;
+            if (AGE_GROUPS.filtered.has(victim.ageGroup))
+                return;
+            if (INJURIES.filtered.has(victim.injury))
+                return;
+
+            SEXES.counts[victim.sex]++;
+            AGE_GROUPS.counts[victim.ageGroup]++;
+            INJURIES.counts[victim.injury]++;
+            allVictimsFiltered = false;
+        });
+
+        if (allVictimsFiltered)
+            return;
+
+        COLLISION_TYPES.counts[collision.type]++;
+        YEARS.counts[yearIndex]++;
+        filteredCollisions.push(collision);
+    });
+
+    return filteredCollisions;
+}
+
 function Victim(victimJSON) {
     var self = this;
 
@@ -151,8 +200,6 @@ function FilterDialog(element_id, map) {
     }
 
     this.filterChanged = function() {
-        self.map.removeAllMarkers();
-        self.map.addCollisionsToMap(Collision.collisions);
     }
 
     var inputs = this.element.getElementsByTagName('input');
@@ -261,14 +308,14 @@ function Map(mapElementID, collisionPopup) {
     }
 }
 
-function StatisticsDisplay() {
+function StatisticsDisplay(map) {
     var self = this;
+    self.map = map;
     this.width = 200;
     this.heightPerGroup = 20;
     this.leftMargin = 50;
 
     this.updateStatisticsDisplay = function() {
-        var stats = new CollisionStatistics(Collision.collisions);
         self.updateChart('age_chart', AGE_GROUPS);
         self.updateChart('sex_chart', SEXES);
         self.updateChart('injury_chart', INJURIES);
@@ -315,6 +362,9 @@ function StatisticsDisplay() {
                 .classed('disabled', false)
                 .on('click', filterOut);
             category.filtered.remove(this.filterIndex);
+
+            self.map.removeAllMarkers();
+            self.map.addCollisionsToMap(Collision.getFilteredCollisions());
             self.updateStatisticsDisplay();
         }
 
@@ -329,6 +379,9 @@ function StatisticsDisplay() {
                 .classed('disabled', true)
                 .on('click', filterIn);
             category.filtered.add(this.filterIndex);
+
+            self.map.removeAllMarkers();
+            self.map.addCollisionsToMap(Collision.getFilteredCollisions());
             self.updateStatisticsDisplay();
         }
 
@@ -358,48 +411,4 @@ function StatisticsDisplay() {
 }
 
 function CollisionStatistics(collisions) {
-    var self = this;
-
-    function resetCategoryCounts(category) {
-        for (var i = 0; i < category.counts.length; i++)
-            category.counts[i] = 0;
-    }
-
-    resetCategoryCounts(SEXES);
-    resetCategoryCounts(YEARS);
-    resetCategoryCounts(COLLISION_TYPES);
-    resetCategoryCounts(AGE_GROUPS);
-    resetCategoryCounts(INJURIES);
-    var totalVictims = 0;
-
-    collisions.forEach(function(collision) {
-        totalVictims += collision.victims.length;
-
-        var yearIndex = collision.year - YEARS.values[0];
-        if (YEARS.filtered.has(yearIndex))
-            return;
-        if (COLLISION_TYPES.filtered.has(collision.type))
-            return;
-
-        var allVictimsFiltered = collision.victims.length > 0;
-        collision.victims.forEach(function(victim) {
-            if (SEXES.filtered.has(victim.sex))
-                return;
-            if (AGE_GROUPS.filtered.has(victim.ageGroup))
-                return;
-            if (INJURIES.filtered.has(victim.injury))
-                return;
-
-            SEXES.counts[victim.sex]++;
-            AGE_GROUPS.counts[victim.ageGroup]++;
-            INJURIES.counts[victim.injury]++;
-            allVictimsFiltered = false;
-        });
-
-        if (allVictimsFiltered)
-            return;
-
-        COLLISION_TYPES.counts[collision.type]++;
-        YEARS.counts[yearIndex]++;
-    });
 }

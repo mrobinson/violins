@@ -90,9 +90,8 @@
         var filterDialog = new FilterDialog('filter_dialog', map);
 
         Collision.addFromJSON(data);
-        map.addCollisionsToMap(Collision.collisions);
+        map.addCollisionsToMap(Collision.getFilteredCollisions());
 
-        var statisticsDisplay = new StatisticsDisplay();
-        //statisticsDisplay.updateStatisticsDisplay();
+        var statisticsDisplay = new StatisticsDisplay(map);
     </script>
 </html>
