@@ -192,11 +192,37 @@ function Victim(victimJSON) {
         this.injury--;
 }
 
-function CollisionPopup() {
+function CollisionPopup(map) {
     var self = this;
+    this.popup = null;
 
-    this.show = function(collisionGroup) {
-        collisionGroup.sort(function(a, b) {
+    this.open = function(collisionGroup, map) {
+        self.collisionGroup = collisionGroup;
+        self.popup = L.popup({closeButton: false})
+            .setLatLng(collisionGroup[0].location)
+            .setContent(self.getPopupContents())
+            .on('popupclose', function() {
+                self.popup = null;
+                self.collisionGroup = null;
+            }).openOn(map);
+    }
+
+    this.updatePopupContents = function() {
+        if (self.popup === null)
+            return;
+
+        // FIXME: Use documented API when it exists.
+        if (self.collisionGroup.length == 0)
+            self.popup._close();
+
+        self.popup.setContent(self.getPopupContents());
+    }
+
+    this.getPopupContents = function() {
+        if (self.collisionGroup.length == 0)
+            return;
+
+        self.collisionGroup.sort(function(a, b) {
             if (a.date > b.date)
               return 1;
             if (a.date < b.date)
@@ -206,11 +232,11 @@ function CollisionPopup() {
 
         var popupHTML = '<div class="collision_detail_popup">';
         popupHTML += '<div class="intersection">';
-        popupHTML += collisionGroup[0].intersection;
+        popupHTML += self.collisionGroup[0].intersection;
         popupHTML += '</div>';
 
-        for (var i = 0; i < collisionGroup.length; i++) {
-            var collision = collisionGroup[i];
+        for (var i = 0; i < self.collisionGroup.length; i++) {
+            var collision = self.collisionGroup[i];
             popupHTML += '<div class="collision">';
             popupHTML += '<div class="header">';
             if (collision.isBikeCollision()) {
@@ -248,39 +274,49 @@ function Map(mapElementID, collisionPopup) {
     var self = this;
     this.collisionPopup = collisionPopup;
     this.map = L.map(mapElementID).setView(INITIAL_MAP_CENTER, INITIAL_MAP_ZOOM);
-    this.markers = [];
+    this.collisionGroups = d3.map();
 
     // This allows testing offline without tiles.
     if (L.StamenTileLayer !== undefined)
         this.map.addLayer(new L.StamenTileLayer('toner'));
 
     this.removeAllMarkers = function() {
-        for (var i = 0; i < self.markers.length; i++) {
-            self.map.removeLayer(self.markers[i]);
-        }
-        self.markers = [];
+        self.collisionGroups.values().forEach(function(value) {
+            if (value.marker !== null) {
+                self.map.removeLayer(value.marker);
+                value.marker = null;
+            }
+        });
     }
 
     this.groupCollisionsByIntersection = function(collision) {
-        var resultMap = d3.map();
-
-        collision.forEach(function(collision, index) {
-            if (!resultMap.has(collision.intersection))
-                resultMap.set(collision.intersection, []);
-            resultMap.get(collision.intersection).push(collision);
+        // Reuse old collision groups so that we can persist state across map rebuilding.
+        self.collisionGroups.values().forEach(function(value) {
+            while (value.length > 0)
+                value.pop();
         });
 
-        return resultMap.values();
+        collision.forEach(function(collision, index) {
+            if (!self.collisionGroups.has(collision.intersection))
+                self.collisionGroups.set(collision.intersection, []);
+            self.collisionGroups.get(collision.intersection).push(collision);
+        });
     }
 
     this.addCollisionsToMap = function(collisions) {
-        var collisionGroups = self.groupCollisionsByIntersection(collisions);
+        self.groupCollisionsByIntersection(collisions);
+        self.collisionPopup.updatePopupContents();
+
         var map = self.map;
         var smallMarkers = [];
+        var collisionGroups = self.collisionGroups.values();
 
         for (var i = 0; i < collisionGroups.length; i++) {
             var group = collisionGroups[i];
-            var smallMarker = group.length > 1;
+            if (group.length == 0)
+                continue;
+
+            var smallMarker = group.length == 1;
             var size = smallMarker ? 60 : 80;
             var color = INJURIES.colors[d3.min(group.map(function(collision) { return collision.mostSevereInjury() }))];
 
@@ -291,13 +327,11 @@ function Map(mapElementID, collisionPopup) {
                 fillOpacity: 0.7,
                 opacity: 1.0,
             }).on('click', function(e) {
-                var popupText = self.collisionPopup.show(e.target.collisionGroup);
-                var popupLocation = e.target.collisionGroup[0].location;
-                var popup = L.popup().setLatLng(popupLocation).setContent(popupText).openOn(self.map);
+                self.collisionPopup.open(e.target.collisionGroup, map);
             });
-            marker.collisionGroup = group;
-            self.markers.push(marker);
+            marker.collisionGroup = group
 
+            group.marker = marker;
             if (!smallMarker)
                 marker.addTo(map).
             else
