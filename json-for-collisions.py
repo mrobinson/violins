@@ -56,6 +56,14 @@ def intersection_name(collision):
     intersections = sorted([collision.primary_road, collision.secondary_road])
     return '{0} and {1}'.format(*intersections)
 
+def get_marker_index_for_collision(collision, markers):
+    location = [float(collision.latitude), float(collision.longitude)]
+    for (i, marker) in enumerate(markers):
+        if marker == location:
+            return i
+
+    markers.append(location)
+    return len(markers) - 1
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
@@ -64,7 +72,8 @@ if __name__ == "__main__":
 
     read_all_data_from_database(sys.argv[1])
 
-    data = []
+    markers = []
+    collisions = []
     for collision in find_all_bike_and_pedestrian_collision():
         victims = []
         for victim in collision.victims:
@@ -74,12 +83,17 @@ if __name__ == "__main__":
                 'injury': int(victim.degree_of_injury),
             })
         time = calendar.timegm(datetime.datetime.strptime(collision.date + collision.time, "%Y%m%d%H%M").utctimetuple())
-        data.append({
+        collisions.append({
             'type': collision_type_as_number(collision),
             'intersection': intersection_name(collision),
-            'location': [float(collision.latitude), float(collision.longitude)],
+            'marker': get_marker_index_for_collision(collision, markers),
             'time': time,
             'victims': victims,
         })
 
-    print(json.dumps(data))
+    print("markers = ")
+    print(json.dumps(markers))
+    print(";")
+    print("collisions = ")
+    print(json.dumps(collisions))
+    print(";")

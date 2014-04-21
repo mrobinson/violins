@@ -68,10 +68,61 @@ var INJURIES = {
 var ALL_CATEGORIES = [YEARS, SEXES, COLLISION_TYPES, AGE_GROUPS, INJURIES];
 
 function updateAfterFilterChange() {
-    Collision.updateFilteredStatistics();
+    Marker.updateFilteredCollisions();
     map.removeAllMarkers();
-    map.addCollisionsToMap(Collision.filteredCollisions);
+    map.addCollisionsToMap();
     statisticsDisplay.update();
+}
+
+function Marker(jsonMarker) {
+    var self = this;
+    this.latitude = jsonMarker[0];
+    this.longitude = jsonMarker[1];
+    this.collisions = [];
+    this.filteredCollisions = [];
+}
+
+Marker.updateFilteredCollisions = function() {
+    ALL_CATEGORIES.forEach(function(category) {
+        for (var i = 0; i < category.counts.length; i++)
+            category.counts[i] = 0;
+    });
+
+    Marker.markers.forEach(function(marker) {
+        marker.filteredCollisions = []
+        marker.collisions.forEach(function(collision) {
+            var yearIndex = collision.year - YEARS.values[0];
+            if (YEARS.filtered.has(yearIndex))
+                return;
+            if (COLLISION_TYPES.filtered.has(collision.type))
+                return;
+
+            var allVictimsFiltered = collision.victims.length > 0;
+            collision.getUnfilteredVictims().forEach(function(victim) {
+                SEXES.counts[victim.sex]++;
+                AGE_GROUPS.counts[victim.ageGroup]++;
+                INJURIES.counts[victim.injury]++;
+                allVictimsFiltered = false;
+            });
+
+            if (allVictimsFiltered)
+                return;
+
+            COLLISION_TYPES.counts[collision.type]++;
+            YEARS.counts[yearIndex]++;
+            marker.filteredCollisions.push(collision);
+        });
+    });
+}
+
+Marker.addFromJSON = function(data) {
+    if (Marker.markers === undefined) {
+        Marker.markers = [];
+    }
+
+    for (var i = 0; i < data.length; i++) {
+        Marker.markers.push(new Marker(data[i]));
+    }
 }
 
 function Collision(jsonCollision) {
@@ -81,7 +132,8 @@ function Collision(jsonCollision) {
     this.year = this.date.getFullYear();
     this.sex = jsonCollision.sex;
     this.type = jsonCollision.type;
-    this.location = jsonCollision.location;
+    this.marker = Marker.markers[jsonCollision.marker];
+    this.marker.collisions.push(this);
 
     this.victims = [];
     for (var v = 0; v < jsonCollision.victims.length; v++) {
@@ -124,40 +176,9 @@ Collision.addFromJSON = function(data) {
     }
 
     // TODO: Eventually we should only filter and add the new collisions for performance reasons.
-    Collision.updateFilteredStatistics();
-    map.addCollisionsToMap(Collision.filteredCollisions);
+    Marker.updateFilteredCollisions();
+    map.addCollisionsToMap();
     statisticsDisplay.update();
-}
-
-Collision.updateFilteredStatistics = function() {
-    ALL_CATEGORIES.forEach(function(category) {
-        for (var i = 0; i < category.counts.length; i++)
-            category.counts[i] = 0;
-    });
-
-    Collision.filteredCollisions = [];
-    Collision.collisions.forEach(function(collision) {
-        var yearIndex = collision.year - YEARS.values[0];
-        if (YEARS.filtered.has(yearIndex))
-            return;
-        if (COLLISION_TYPES.filtered.has(collision.type))
-            return;
-
-        var allVictimsFiltered = collision.victims.length > 0;
-        collision.getUnfilteredVictims().forEach(function(victim) {
-            SEXES.counts[victim.sex]++;
-            AGE_GROUPS.counts[victim.ageGroup]++;
-            INJURIES.counts[victim.injury]++;
-            allVictimsFiltered = false;
-        });
-
-        if (allVictimsFiltered)
-            return;
-
-        COLLISION_TYPES.counts[collision.type]++;
-        YEARS.counts[yearIndex]++;
-        Collision.filteredCollisions.push(collision);
-    });
 }
 
 function Victim(victimJSON) {
@@ -204,14 +225,14 @@ function CollisionPopup(map) {
     var self = this;
     this.popup = null;
 
-    this.open = function(collisionGroup, map) {
-        self.collisionGroup = collisionGroup;
+    this.open = function(marker, map) {
+        self.marker = marker;
         self.popup = L.popup({closeButton: false})
-            .setLatLng(collisionGroup[0].location)
+            .setLatLng([marker.latitude, marker.longitude])
             .setContent(self.getPopupContents())
             .on('popupclose', function() {
                 self.popup = null;
-                self.collisionGroup = null;
+                self.marker = null;
             }).openOn(map);
     }
 
@@ -220,17 +241,18 @@ function CollisionPopup(map) {
             return;
 
         // FIXME: Use documented API when it exists.
-        if (self.collisionGroup.length == 0)
+        if (self.marker.filteredCollisions.length == 0)
             self.popup._close();
 
         self.popup.setContent(self.getPopupContents());
     }
 
     this.getPopupContents = function() {
-        if (self.collisionGroup.length == 0)
+        var collisions = self.marker.filteredCollisions;
+        if (collisions.length == 0)
             return;
 
-        self.collisionGroup.sort(function(a, b) {
+        collisions.sort(function(a, b) {
             if (a.date > b.date)
               return 1;
             if (a.date < b.date)
@@ -240,11 +262,11 @@ function CollisionPopup(map) {
 
         var popupHTML = '<div class="collision_detail_popup">';
         popupHTML += '<div class="intersection">';
-        popupHTML += self.collisionGroup[0].intersection;
+        popupHTML += collisions[0].intersection;
         popupHTML += '</div>';
 
-        for (var i = 0; i < self.collisionGroup.length; i++) {
-            var collision = self.collisionGroup[i];
+        for (var i = 0; i < collisions.length; i++) {
+            var collision = collisions[i];
             popupHTML += '<div class="collision">';
             popupHTML += '<div class="header">';
             if (collision.isBikeCollision()) {
@@ -273,7 +295,6 @@ function CollisionPopup(map) {
         }
 
         popupHTML += '</div>';
-
         return popupHTML;
     }
 }
@@ -282,72 +303,55 @@ function Map(mapElementID, collisionPopup) {
     var self = this;
     this.collisionPopup = collisionPopup;
     this.map = L.map(mapElementID).setView(INITIAL_MAP_CENTER, INITIAL_MAP_ZOOM);
-    this.collisionGroups = d3.map();
 
     // This allows testing offline without tiles.
     if (L.StamenTileLayer !== undefined)
         this.map.addLayer(new L.StamenTileLayer('toner'));
 
     this.removeAllMarkers = function() {
-        self.collisionGroups.values().forEach(function(value) {
-            if (value.marker !== null) {
-                self.map.removeLayer(value.marker);
-                value.marker = null;
+        Marker.markers.forEach(function(marker) {
+            if (marker.circle !== null) {
+                self.map.removeLayer(marker.circle);
+                marker.circle = null;
             }
         });
     }
 
-    this.groupCollisionsByIntersection = function(collision) {
-        // Reuse old collision groups so that we can persist state across map rebuilding.
-        self.collisionGroups.values().forEach(function(value) {
-            while (value.length > 0)
-                value.pop();
-        });
-
-        collision.forEach(function(collision, index) {
-            if (!self.collisionGroups.has(collision.intersection))
-                self.collisionGroups.set(collision.intersection, []);
-            self.collisionGroups.get(collision.intersection).push(collision);
-        });
-    }
-
-    this.addCollisionsToMap = function(collisions) {
-        self.groupCollisionsByIntersection(collisions);
+    this.addCollisionsToMap = function(c) {
         self.collisionPopup.updatePopupContents();
 
         var map = self.map;
-        var smallMarkers = [];
-        var collisionGroups = self.collisionGroups.values();
-
-        for (var i = 0; i < collisionGroups.length; i++) {
-            var group = collisionGroups[i];
-            if (group.length == 0)
+        var smallCircles = [];
+        for (var i = 0; i < Marker.markers.length; i++) {
+            var marker = Marker.markers[i];
+            var collisions = marker.filteredCollisions;;
+            if (collisions.length == 0)
                 continue;
 
-            var smallMarker = group.length == 1;
-            var size = smallMarker ? 60 : 80;
-            var color = INJURIES.colors[d3.min(group.map(function(collision) { return collision.mostSevereInjury() }))];
+            var isSmall = collisions.length == 1;
+            var size = isSmall ? 60 : 80;
+            var color = INJURIES.colors[d3.min(collisions.map(function(collision) { return collision.mostSevereInjury() }))];
 
-            var marker = L.circle(group[0].location, size, {
+            var circle = L.circle([marker.latitude, marker.longitude], size, {
                 stroke: false,
                 color: color,
                 fillColor: color,
                 fillOpacity: 0.7,
                 opacity: 1.0,
             }).on('click', function(e) {
-                self.collisionPopup.open(e.target.collisionGroup, map);
+                self.collisionPopup.open(e.target.marker, map);
             });
-            marker.collisionGroup = group
+            circle.marker = marker;
+            marker.circle = circle;
 
-            group.marker = marker;
-            if (!smallMarker)
-                marker.addTo(map).
+            if (!isSmall)
+                circle.addTo(map);
             else
-                smallMarkers.push(marker);
+                smallCircles.push(circle);
         }
 
-        smallMarkers.forEach(function(marker) {
-            marker.addTo(map);
+        smallCircles.forEach(function(circle) {
+            circle.addTo(map);
         });
     }
 }
