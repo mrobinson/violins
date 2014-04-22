@@ -132,6 +132,12 @@ Marker.updateFilteredCollisions = function() {
                 allVictimsFiltered = false;
             });
 
+            // 4 is "Other." If there are no victims, that's similar to a catchall
+            // category of injury. This special case ensures that when "other" is filtered
+            // out, we skip these collisions missing victims.
+            if (collision.victims.length == 0 && INJURIES.filtered.has(4))
+                return;
+
             if (allVictimsFiltered)
                 return;
 
