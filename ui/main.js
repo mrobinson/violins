@@ -94,7 +94,7 @@ function Marker(jsonMarker) {
             return;
 
         var isSmall = collisions.length == 1;
-        var size = isSmall ? 60 : 80;
+        var size = isSmall ? 40 : 60;
         var color = INJURIES.colors[self.mostSevereInjury()];
         self.mapOverlay = L.circle([self.latitude, self.longitude], size, {
             stroke: false,
@@ -281,9 +281,9 @@ function CollisionPopup(map) {
 
         collisions.sort(function(a, b) {
             if (a.date > b.date)
-              return 1;
-            if (a.date < b.date)
               return -1;
+            if (a.date < b.date)
+              return 1;
             return 0;
         });
 
