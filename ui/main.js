@@ -80,6 +80,33 @@ function Marker(jsonMarker) {
     this.longitude = jsonMarker[1];
     this.collisions = [];
     this.filteredCollisions = [];
+    this.mapOverlay = null;
+
+    this.mostSevereInjury = function() {
+        return d3.min(self.filteredCollisions.map(function(collision) {
+             return collision.mostSevereInjury();
+        }));
+    }
+
+    this.addToMap = function(map) {
+        var collisions = self.filteredCollisions;
+        if (collisions.length == 0)
+            return;
+
+        var isSmall = collisions.length == 1;
+        var size = isSmall ? 60 : 80;
+        var color = INJURIES.colors[self.mostSevereInjury()];
+        self.mapOverlay = L.circle([self.latitude, self.longitude], size, {
+            stroke: false,
+            color: color,
+            fillColor: color,
+            fillOpacity: 0.7,
+            opacity: 1.0,
+        }).on('click', function(e) {
+            map.collisionPopup.open(self, map.map);
+        });
+        self.mapOverlay.addTo(map.map);
+    }
 }
 
 Marker.updateFilteredCollisions = function() {
@@ -310,9 +337,9 @@ function Map(mapElementID, collisionPopup) {
 
     this.removeAllMarkers = function() {
         Marker.markers.forEach(function(marker) {
-            if (marker.circle !== null) {
-                self.map.removeLayer(marker.circle);
-                marker.circle = null;
+            if (marker.mapOverlay !== null) {
+                self.map.removeLayer(marker.mapOverlay);
+                marker.mapOverlay = null;
             }
         });
     }
@@ -320,39 +347,18 @@ function Map(mapElementID, collisionPopup) {
     this.addCollisionsToMap = function(c) {
         self.collisionPopup.updatePopupContents();
 
-        var map = self.map;
-        var smallCircles = [];
-        for (var i = 0; i < Marker.markers.length; i++) {
-            var marker = Marker.markers[i];
-            var collisions = marker.filteredCollisions;;
-            if (collisions.length == 0)
-                continue;
-
-            var isSmall = collisions.length == 1;
-            var size = isSmall ? 60 : 80;
-            var color = INJURIES.colors[d3.min(collisions.map(function(collision) { return collision.mostSevereInjury() }))];
-
-            var circle = L.circle([marker.latitude, marker.longitude], size, {
-                stroke: false,
-                color: color,
-                fillColor: color,
-                fillOpacity: 0.7,
-                opacity: 1.0,
-            }).on('click', function(e) {
-                self.collisionPopup.open(e.target.marker, map);
-            });
-            circle.marker = marker;
-            marker.circle = circle;
-
-            if (!isSmall)
-                circle.addTo(map);
-            else
-                smallCircles.push(circle);
-        }
-
-        smallCircles.forEach(function(circle) {
-            circle.addTo(map);
+        // Smaller markers last ensure that they can be seen and clicked when markers overlap.
+        Marker.markers.sort(function(a, b) {
+            if (a.filteredCollisions.length < b.filteredCollisions.length)
+              return 1;
+            if (a.filteredCollisions.length > b.filteredCollisions.length)
+              return -1;
+            return 0;
         });
+
+        for (var i = 0; i < Marker.markers.length; i++) {
+            Marker.markers[i].addToMap(self);
+        }
     }
 }
 
