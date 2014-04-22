@@ -82,6 +82,11 @@ if __name__ == "__main__":
                 'sex': victim_sex_as_number(victim),
                 'injury': int(victim.degree_of_injury),
             })
+
+        # No clue where this time comes from, but work around it for now.
+        if (collision.time == "2500"):
+            collision.time = "0000"
+
         time = calendar.timegm(datetime.datetime.strptime(collision.date + collision.time, "%Y%m%d%H%M").utctimetuple())
         collisions.append({
             'type': collision_type_as_number(collision),
