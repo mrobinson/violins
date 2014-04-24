@@ -469,7 +469,9 @@ function StatisticsDisplay(map) {
 function bodyLoaded() {
     window.map = new Map('map', new CollisionPopup());
     window.statisticsDisplay = new StatisticsDisplay(map);
-    d3.json('data.json', function(data) {
-        Collision.addFromJSON(data);
+    ['oakland-2008.json', 'oakland-2009.json', 'oakland-2010.json', 'oakland-2011.json', 'oakland-2012.json'].forEach(function(url) {
+        d3.json(url, function(data) {
+            Collision.addFromJSON(data);
+        });
     });
 }

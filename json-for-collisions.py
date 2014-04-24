@@ -69,6 +69,8 @@ if __name__ == "__main__":
     if len(sys.argv) < 2:
         print("Must specify city directory")
         sys.exit(1)
+    collecting_markers = sys.argv[2] == 'markers'
+    year = int(sys.argv[2])
 
     read_all_data_from_database(sys.argv[1])
 
@@ -87,18 +89,18 @@ if __name__ == "__main__":
         if (collision.time == "2500"):
             collision.time = "0000"
 
-        time = calendar.timegm(datetime.datetime.strptime(collision.date + collision.time, "%Y%m%d%H%M").utctimetuple())
-        collisions.append({
+        date = datetime.datetime.strptime(collision.date + collision.time, "%Y%m%d%H%M")
+        collision = {
             'type': collision_type_as_number(collision),
             'intersection': intersection_name(collision),
             'marker': get_marker_index_for_collision(collision, markers),
-            'time': time,
+            'time': calendar.timegm(date.utctimetuple()),
             'victims': victims,
-        })
+        }
+        if date.year == year:
+            collisions.append(collision)
 
-    print("markers = ")
-    print(json.dumps(markers))
-    print(";")
-    print("collisions = ")
-    print(json.dumps(collisions))
-    print(";")
+    if collecting_markers:
+        print(json.dumps(markers))
+    else:
+        print(json.dumps(collisions))
