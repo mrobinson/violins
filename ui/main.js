@@ -210,6 +210,7 @@ Collision.addFromJSON = function(data) {
 
     // TODO: Eventually we should only filter and add the new collisions for performance reasons.
     Marker.updateFilteredCollisions();
+    map.removeAllMarkers();
     map.addCollisionsToMap();
     statisticsDisplay.update();
 }
