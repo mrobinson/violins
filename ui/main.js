@@ -465,3 +465,11 @@ function StatisticsDisplay(map) {
         self.createChart(category);
     });
 }
+
+function bodyLoaded() {
+    window.map = new Map('map', new CollisionPopup());
+    window.statisticsDisplay = new StatisticsDisplay(map);
+    d3.json('data.json', function(data) {
+        Collision.addFromJSON(data);
+    });
+}
