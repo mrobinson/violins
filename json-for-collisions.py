@@ -15,6 +15,7 @@
 # limitations under the License.
 
 import calendar
+import collections
 import datetime
 import json
 import os
@@ -22,6 +23,7 @@ import sqlite3
 import switrs
 import sys
 
+YEARS = [2008, 2009, 2010, 2011, 2012]
 
 def read_all_data_from_database(city_directory):
     connection = sqlite3.connect(os.path.join(city_directory, "all-collisions.db"))
@@ -69,13 +71,12 @@ if __name__ == "__main__":
     if len(sys.argv) < 2:
         print("Must specify city directory")
         sys.exit(1)
-    collecting_markers = sys.argv[2] == 'markers'
-    year = int(sys.argv[2])
+
+    markers = []
+    collisions = collections.defaultdict(lambda: [])
 
     read_all_data_from_database(sys.argv[1])
 
-    markers = []
-    collisions = []
     for collision in find_all_bike_and_pedestrian_collision():
         victims = []
         for victim in collision.victims:
@@ -97,10 +98,11 @@ if __name__ == "__main__":
             'time': calendar.timegm(date.utctimetuple()),
             'victims': victims,
         }
-        if date.year == year:
-            collisions.append(collision)
+        collisions[date.year].append(collision)
 
-    if collecting_markers:
-        print(json.dumps(markers))
-    else:
-        print(json.dumps(collisions))
+    for year in YEARS:
+        with open(os.path.join('ui', 'oakland-' + str(year) + '.json'), 'w') as file:
+            file.write(json.dumps(collisions[year]))
+
+    with open(os.path.join('ui', 'markers.js'), 'w') as file:
+        file.write('Marker.addFromJSON(' + json.dumps(markers) + ');\n')

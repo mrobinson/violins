@@ -354,8 +354,11 @@ function Map(mapElementID, collisionPopup) {
     this.addCollisionsToMap = function(c) {
         self.collisionPopup.updatePopupContents();
 
-        // Smaller markers last ensure that they can be seen and clicked when markers overlap.
-        Marker.markers.sort(function(a, b) {
+        // Smaller markers last ensure that they can be seen and clicked when markers overlap. We don't
+        // want to sort the static array, since Collision JSON refers to array by index and we may add
+        // more collisions in the future.
+        var markers = Marker.markers.slice(0);
+        markers.sort(function(a, b) {
             if (a.filteredCollisions.length < b.filteredCollisions.length)
               return 1;
             if (a.filteredCollisions.length > b.filteredCollisions.length)
@@ -363,8 +366,8 @@ function Map(mapElementID, collisionPopup) {
             return 0;
         });
 
-        for (var i = 0; i < Marker.markers.length; i++) {
-            Marker.markers[i].addToMap(self);
+        for (var i = 0; i < markers.length; i++) {
+            markers[i].addToMap(self);
         }
     }
 }
