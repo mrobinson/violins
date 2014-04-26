@@ -42,7 +42,7 @@ class CollisionGoecoder():
            return location_file.write(json.dumps(self.location_database, sort_keys=True))
 
     def get_location_for_collision(self, collision):
-        location_key = '{0} and {1}'.format(collision.primary_road, collision.secondary_road)
+        location_key = collision.intersection_string()
         if location_key in self.location_database:
             return self.location_database[location_key]
 

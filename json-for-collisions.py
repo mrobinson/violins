@@ -54,10 +54,6 @@ def victim_sex_as_number(victim):
         return 1
     return 2
 
-def intersection_name(collision):
-    intersections = sorted([collision.primary_road, collision.secondary_road])
-    return '{0} and {1}'.format(*intersections)
-
 def get_marker_index_for_collision(collision, markers):
     location = [float(collision.latitude), float(collision.longitude)]
     for (i, marker) in enumerate(markers):
@@ -93,7 +89,7 @@ if __name__ == "__main__":
         date = datetime.datetime.strptime(collision.date + collision.time, "%Y%m%d%H%M")
         collision = {
             'type': collision_type_as_number(collision),
-            'intersection': intersection_name(collision),
+            'intersection': collision.intersection_string(),
             'marker': get_marker_index_for_collision(collision, markers),
             'time': calendar.timegm(date.utctimetuple()),
             'victims': victims,

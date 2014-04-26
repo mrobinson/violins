@@ -107,12 +107,16 @@ class Collision(object):
         }
         return collision_mapping[self.motor_vehicle_with]
 
+    def intersection_string(self):
+        if self.secondary_road.startswith(self.primary_road):
+            return self.secondary_road
+        return '{0} and {1}'.format(self.primary_road, self.secondary_road)
+
     def __str__(self):
-        return "{0} and {1} car/{2} at {3}, {4}".format(self.primary_road,
-                                                             self.secondary_road,
-                                                             self.collision_with(),
-                                                             self.latitude,
-                                                             self.longitude)
+        return "{0} car/{1} at {2}, {3}".format(self.intersection_string(),
+                                                self.collision_with(),
+                                                self.latitude,
+                                                self.longitude)
 
 
 class Party(object):
