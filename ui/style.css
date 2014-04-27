@@ -45,17 +45,6 @@ body {
     width: 100%;
 }
 
-#filter_dialog {
-    position: absolute;
-    overflow: hidden;
-    display: none;
-    bottom: 40px;
-    left: 5px;
-    padding: 5px;
-    background-color: white;
-    z-index: 2000;
-}
-
 #toolbar {
     position: absolute;
     overflow: hidden;
