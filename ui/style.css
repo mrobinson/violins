@@ -142,6 +142,15 @@ a:active { color: red; }
     font-size: 12px;
 }
 
+#stats h2 {
+    margin-top: 0px;
+}
+
+#stats_notes {
+    font-size: smaller;
+    font-style: italic;
+}
+
 #stats td {
     padding: 3px;
     vertical-align: top;
