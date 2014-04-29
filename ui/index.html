@@ -46,14 +46,19 @@
             </table>
         </div>
 
-        <div id="toolbar">
-            <div class="button-bar" style="margin-right: 10px;">
-               <label class="button-bar-item">
-                 <button class="button-bar-button">About</button>
-               </label>
+        <div id="map"></div>
+
+        <div class="button" style="margin-right: 10px;" onclick="toggleAboutDialog(true);">About</div>
+
+        <div id="about" class="inactive" onclick="toggleAboutDialog(false);">
+            <div id="about_dialog">
+                <h1>Oakland Traffic Violence Map</h1>
+                <div>Created with data from the California Statewide Integrated Traffic Records System,
+                     leaflet, map tiles from Stamen, and d3. Released under Version 2.0 of the Apache License.
+                     Code available on Github.</div>
+                <div class="closer"><a href="#" onclick="toggleAboutDialog(false);">Close</div>
             </div>
         </div>
 
-        <div id="map"></div>
     </body>
 </html>

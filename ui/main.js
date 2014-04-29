@@ -479,3 +479,14 @@ function bodyLoaded() {
         });
     });
 }
+
+function toggleAboutDialog(show) {
+    if (show) {
+        document.getElementById('about').className = "active";
+        document.getElementById('about_dialog').style.display = "block";
+        return;
+    }
+
+    document.getElementById('about').className = "inactive";
+    document.getElementById('about_dialog').style.display = "none";
+}

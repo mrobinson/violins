@@ -23,11 +23,15 @@ html {
 body {
     margin: 0px;
     height: 100%;
-    width: 100%
+    width: 100%;
     font-family: Helvetica, Arial, sans-serif;
     font-weight: bold;
     font-size: 10pt;
 }
+
+a { color: black; }
+a:visited { color: black; }
+a:active { color: red; }
 
 .injury_fatal {
     color: red;
@@ -45,114 +49,23 @@ body {
     width: 100%;
 }
 
-#toolbar {
-    position: absolute;
-    overflow: hidden;
-    bottom: 0px;
-    left: 0;
-    padding: 5px;
-    background-color: rgba(1, 1, 1, 0);
+.button {
+    background: white;
     z-index: 2000;
-}
 
-#toolbar > .button-bar {
-    float: left;
-    margin-top: 10px; 
-    margin-right: 10px;
-}
+    border-radius: 4px;
+    box-shadow: 0px 1px 5px rgba(0, 0, 0, 0.68);
 
-#toolbar > .button-bar:last-child {
-    margin-right: 10px;
-}
-
-.button-bar-item > input {
-    border: 0;
-    clip: rect(0 0 0 0);
-    height: 2rem;
-    margin: 0 -2rem -2rem 0;
-    overflow: hidden;
-    padding: 0;
     position: absolute;
-    width: auto;
-    opacity: 0.001;
-}
+    overflow: hidden;
+    bottom: 10px;
+    left: 10px;
+    padding-left: 10px;
+    padding-right: 10px;
+    padding-top: 7px;
+    padding-bottom: 7px;
 
-.button-bar {
-  display: table;
-  table-layout: fixed;
-  white-space: no-wrap;
-  margin: 0;
-  padding: 0;
-}
-
-.button-bar-item {
-    display: table-cell;
-    width: auto;
-    border-radius: 0;
-    box-shadow: 0px 1px 5px rgba(0, 0, 0, 0.65);
-}
-
-.button-bar > .button-bar-item:first-child {
-  border-left: 0px;
-  border-top-left-radius: 4px;
-  border-bottom-left-radius: 4px;
-}
-
-.button-bar > .button-bar-item:last-child {
-  border-top-right-radius: 4px;
-  border-bottom-right-radius: 4px;
-}
-
-.button,
-.button-bar-button {
-  position: relative;
-  display: inline-block;
-  overflow: hidden;
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-  border: none;
-  background: transparent;
-  background-clip: padding-box;
-  color: inherit;
-  vertical-align: top;
-  text-decoration: none;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font: inherit;
-  cursor: default;
-  user-select: none;
-}
-
-.button-bar-button {
-  /* Important inheritance to manipulate border radius from parent */
-  border-radius: inherit;
-
-    font-family: sans-serif;
-    font-weight: bold;
-    padding: 0 1.0rem;
-    border-right: 1px solid #ccc;
-    background-color: white;
-    color: #454545;
-    line-height: 2rem;
-    outline: 0;
-}
-
-:checked + .button-bar-button,
-.button-bar-button:active,
-.button-bar-button.is-active {
-  background-color: #d3d7d7;
-}
-
-.button-bar-item:disabled,
-.button-bar-item.is-disabled {
-  opacity: 0.3;
-  cursor: default;
-  pointer-events: none;
-}
-
-.button-bar-button:focus {
-  z-index: 2000;
+    cursor: pointer;
 }
 
 .leaflet-popup-content-wrapper {
@@ -256,3 +169,50 @@ body {
     text-decoration: line-through;
     fill: grey;
 }
+
+#about {
+    position: absolute;
+    top: 0;
+    left: 0;
+    margin: 0px;
+    height: 100%;
+    width: 100%;
+}
+
+.inactive {
+    display: none;
+}
+
+.active {
+    z-index: 3000;
+    background-color: rgba(0, 0, 0, 0.8);
+}
+
+#about_dialog {
+    display: none;
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    margin: auto;
+    width: 50ex;
+    height: 20ex;
+    background: white;
+
+    padding-left: 2ex;
+    padding-right: 2ex;
+    padding-top: 1ex;
+    padding-bottom: 1ex;
+    box-shadow: 0px 1px 5px rgba(256, 256, 256, 0.8);
+}
+
+h1 {
+    font-size: 20px;
+}
+
+#about_dialog .closer{
+    margin-top: 1ex;
+    float: right;
+}
+
