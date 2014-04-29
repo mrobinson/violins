@@ -41,6 +41,10 @@ a:active { color: red; }
     color: purple;
 }
 
+.injury_visible {
+    color: gold;
+}
+
 #map {
     position: absolute;
     top: 0;
