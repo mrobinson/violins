@@ -304,9 +304,9 @@ function CollisionPopup(map) {
             popupHTML += '<div class="collision">';
             popupHTML += '<div class="header">';
             if (collision.isBikeCollision()) {
-                popupHTML += '<div class="symbol">&#x1f6b2;</div>';
+                popupHTML += '<div class="symbol"><img src="bicycle.svg"></div>';
             } else {
-                popupHTML += '<div class="symbol">&#x1f6b6;</div>';
+                popupHTML += '<div class="symbol"><img src="pedestrian.svg"></div>';
             }
             popupHTML += '<div class="date">' + collision.getDateString() + '</div>';
             popupHTML += '<div class="time">' + collision.getTimeString() + '</div>';

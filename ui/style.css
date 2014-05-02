@@ -98,12 +98,13 @@ a:active { color: red; }
 }
 
 .collision_detail_popup .symbol {
-    font-size: 50px;
-    font-weight: normal;
-    width: 60px;
     text-align: center;
-    line-height: 40px;
     float: left;
+    width: 60px;
+}
+
+.collision_detail_popup .symbol img {
+    height: 40px;
 }
 
 .collision_detail_popup .header {
