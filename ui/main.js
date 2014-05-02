@@ -28,7 +28,7 @@ var YEARS = {
     counts: [0, 0, 0, 0, 0],
     filtered: d3.set(),
     chart_id: 'year_chart',
-    chart_width: STAT_WIDTH,
+    chart_width: HALF_STAT_WIDTH,
 }
 
 var SEXES = {
@@ -65,7 +65,15 @@ var INJURIES = {
     chart_width: HALF_STAT_WIDTH,
 }
 
-var ALL_CATEGORIES = [YEARS, SEXES, COLLISION_TYPES, AGE_GROUPS, INJURIES];
+var TIMES_OF_DAY = {
+    names: ['Day', 'Night'],
+    counts: [0, 0],
+    filtered: d3.set(),
+    chart_id: 'time_of_day_chart',
+    chart_width: HALF_STAT_WIDTH,
+}
+
+var ALL_CATEGORIES = [YEARS, SEXES, COLLISION_TYPES, AGE_GROUPS, INJURIES, TIMES_OF_DAY];
 
 function updateAfterFilterChange() {
     Marker.updateFilteredCollisions();
@@ -123,6 +131,8 @@ Marker.updateFilteredCollisions = function() {
                 return;
             if (COLLISION_TYPES.filtered.has(collision.type))
                 return;
+            if (TIMES_OF_DAY.filtered.has(collision.getTimeOfDay()))
+                return;
 
             var allVictimsFiltered = collision.victims.length > 0;
             collision.getUnfilteredVictims().forEach(function(victim) {
@@ -143,6 +153,7 @@ Marker.updateFilteredCollisions = function() {
 
             COLLISION_TYPES.counts[collision.type]++;
             YEARS.counts[yearIndex]++;
+            TIMES_OF_DAY.counts[collision.getTimeOfDay()]++;
             marker.filteredCollisions.push(collision);
         });
     });
@@ -192,6 +203,13 @@ function Collision(jsonCollision) {
             unfilteredVictims.push(victim);
         });
         return unfilteredVictims;
+    }
+
+    this.getTimeOfDay = function() {
+        if (self.date.getHours() < 5 || self.date.getHours() > 19)
+            return 1;
+        else
+            return 0;
     }
 
     this.isBikeCollision = function() { return this.type == 0; }
