@@ -77,7 +77,6 @@ var ALL_CATEGORIES = [YEARS, SEXES, COLLISION_TYPES, AGE_GROUPS, INJURIES, TIMES
 
 function updateAfterFilterChange() {
     Marker.updateFilteredCollisions();
-    map.removeAllMarkers();
     map.addCollisionsToMap();
     statisticsDisplay.update();
 }
@@ -96,24 +95,39 @@ function Marker(jsonMarker) {
         }));
     }
 
-    this.addToMap = function(map) {
-        var collisions = self.filteredCollisions;
-        if (collisions.length == 0)
-            return;
+    this.getOverlayRadius = function() {
+        return self.filteredCollisions.length == 1 ? 40 : 60;
+    }
 
-        var isSmall = collisions.length == 1;
-        var size = isSmall ? 40 : 60;
+    this.getOverlayStyle = function() {
         var color = INJURIES.colors[self.mostSevereInjury()];
-        self.mapOverlay = L.circle([self.latitude, self.longitude], size, {
+        return {
             stroke: false,
             color: color,
             fillColor: color,
             fillOpacity: 0.7,
-            opacity: 1.0,
-        }).on('click', function(e) {
+        }
+    }
+
+    this.addToMap = function(map) {
+        self.mapOverlay = L.circle([self.latitude, self.longitude], self.getOverlayRadius(), self.getOverlayStyle()).on('click', function(e) {
             map.collisionPopup.open(self, map.map);
         });
         self.mapOverlay.addTo(map.map);
+        self.mapOverlay._container.style.display = self.filteredCollisions.length > 0 ? "" : "none";
+    }
+
+    this.addOrUpdateMapOverlay = function(map) {
+        if (self.mapOverlay === null) {
+            self.addToMap(map);
+            return;
+        }
+
+        self.mapOverlay.setRadius(self.getOverlayRadius());
+        self.mapOverlay.setStyle(self.getOverlayStyle());
+
+        // TODO: Would be good to do this without undocumented API.
+        self.mapOverlay._container.style.display = self.filteredCollisions.length > 0 ? "" : "none";
     }
 }
 
@@ -228,7 +242,6 @@ Collision.addFromJSON = function(data) {
 
     // TODO: Eventually we should only filter and add the new collisions for performance reasons.
     Marker.updateFilteredCollisions();
-    map.removeAllMarkers();
     map.addCollisionsToMap();
     statisticsDisplay.update();
 }
@@ -360,15 +373,6 @@ function Map(mapElementID, collisionPopup) {
     if (L.StamenTileLayer !== undefined)
         this.map.addLayer(new L.StamenTileLayer('toner'));
 
-    this.removeAllMarkers = function() {
-        Marker.markers.forEach(function(marker) {
-            if (marker.mapOverlay !== null) {
-                self.map.removeLayer(marker.mapOverlay);
-                marker.mapOverlay = null;
-            }
-        });
-    }
-
     this.addCollisionsToMap = function(c) {
         self.collisionPopup.updatePopupContents();
 
@@ -385,7 +389,7 @@ function Map(mapElementID, collisionPopup) {
         });
 
         for (var i = 0; i < markers.length; i++) {
-            markers[i].addToMap(self);
+            markers[i].addOrUpdateMapOverlay(self);
         }
     }
 }
