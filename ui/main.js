@@ -66,8 +66,9 @@ var INJURIES = {
 }
 
 var TIMES_OF_DAY = {
-    names: ['Day', 'Night'],
-    counts: [0, 0],
+    names: ['6am-12pm', '12pm-6pm', '6pm-12am', '12am-6am'],
+    leftMargin: 70,
+    counts: [0, 0, 0, 0],
     filtered: d3.set(),
     chart_id: 'time_of_day_chart',
     chart_width: HALF_STAT_WIDTH,
@@ -220,10 +221,14 @@ function Collision(jsonCollision) {
     }
 
     this.getTimeOfDay = function() {
-        if (self.date.getHours() < 5 || self.date.getHours() > 19)
-            return 1;
-        else
+        var hours = self.date.getHours();
+        if (hours <= 5)
+            return 3;
+        if (hours <= 11)
             return 0;
+        if (hours <= 17)
+            return 1;
+        return 2;
     }
 
     this.isBikeCollision = function() { return this.type == 0; }
@@ -407,6 +412,10 @@ function StatisticsDisplay(map) {
     }
 
     this.createChart = function(category) {
+        var leftMargin = category.leftMargin;
+        if (leftMargin === undefined)
+            leftMargin = 50;
+
         var width = category.chart_width;
         var height = category.names.length * self.heightPerGroup;
         var sumOfCounts = d3.sum(category.counts);
@@ -417,7 +426,7 @@ function StatisticsDisplay(map) {
 
         var xScale = d3.scale.linear()
             .domain([0, sumOfCounts])
-            .range([0, width - self.leftMargin]);
+            .range([0, width - leftMargin]);
 
         var yAxis = d3.svg.axis()
             .orient("left")
@@ -432,7 +441,7 @@ function StatisticsDisplay(map) {
             .data(category.counts)
                 .enter().append('rect')
                     .attr('class', 'bar')
-                    .attr("transform", 'translate(' + self.leftMargin + ', 0)')
+                    .attr("transform", 'translate(' + leftMargin + ', 0)')
                     .attr('class', 'bar')
                     .attr('y', function(d, i) { return yScale(category.names[i]) + 3; })
                     .attr('width', function(d) {
@@ -442,7 +451,7 @@ function StatisticsDisplay(map) {
                     .attr('height', self.heightPerGroup - 6);
 
         chart.append("g")
-            .attr("transform", 'translate(' + self.leftMargin + ', 0)')
+            .attr("transform", 'translate(' + leftMargin + ', 0)')
             .call(yAxis);
 
         function filterIn(text, index) {
@@ -472,6 +481,10 @@ function StatisticsDisplay(map) {
     }
 
     this.updateChart = function(category) {
+        var leftMargin = category.leftMargin;
+        if (leftMargin === undefined)
+            leftMargin = 50;
+
         var sumOfCounts = d3.sum(category.counts);
         var xScale = d3.scale.linear()
             .domain([0, sumOfCounts])
