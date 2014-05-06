@@ -48,7 +48,7 @@ var COLLISION_TYPES = {
 }
 
 var AGE_GROUPS = {
-    ranges: [14, 24, 25, 74, 150],
+    ranges: [14, 24, 49, 75, 150],
     names: ['0-14', '15-24', '25-49', '50-74', '75+', 'N/A'],
     counts: [0, 0, 0, 0, 0, 0],
     filtered: d3.set(),
