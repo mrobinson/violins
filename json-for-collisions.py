@@ -23,7 +23,7 @@ import sqlite3
 import switrs
 import sys
 
-YEARS = [2008, 2009, 2010, 2011, 2012]
+YEARS = [2008, 2009, 2010, 2011, 2012, 2013]
 
 def read_all_data_from_database(city_directory):
     connection = sqlite3.connect(os.path.join(city_directory, "all-collisions.db"))

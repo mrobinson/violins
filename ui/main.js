@@ -23,9 +23,9 @@ var HALF_STAT_WIDTH = 140; // This is a bit of a hack to avoid a lot of calls to
 var STAT_WIDTH = 275;
 
 var YEARS = {
-    values: [2008, 2009, 2010, 2011, 2012],
-    names: ['2008', '2009', '2010', '2011', '2012'],
-    counts: [0, 0, 0, 0, 0],
+    values: [2008, 2009, 2010, 2011, 2012, 2013],
+    names: ['2008', '2009', '2010', '2011', '2012', '2013'],
+    counts: [0, 0, 0, 0, 0, 0],
     filtered: d3.set(),
     chart_id: 'year_chart',
     chart_width: HALF_STAT_WIDTH,
@@ -508,7 +508,12 @@ function StatisticsDisplay(map) {
 function bodyLoaded() {
     window.map = new Map('map', new CollisionPopup());
     window.statisticsDisplay = new StatisticsDisplay(map);
-    ['oakland-2008.json', 'oakland-2009.json', 'oakland-2010.json', 'oakland-2011.json', 'oakland-2012.json'].forEach(function(url) {
+    ['oakland-2008.json',
+     'oakland-2009.json',
+     'oakland-2010.json',
+     'oakland-2011.json',
+     'oakland-2012.json',
+     'oakland-2013.json'].forEach(function(url) {
         d3.json(url, function(data) {
             Collision.addFromJSON(data);
         });
