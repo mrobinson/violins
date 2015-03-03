@@ -43,6 +43,14 @@ class CollisionGoecoder():
 
     def get_location_for_collision(self, collision):
         location_key = collision.intersection_string()
+
+        # This is a bit of a hack!
+        # Google doesn't know how to properly decode the Bay Bridge metering
+        # lights, so we just emit the proper geolocation when we detect this
+        # location.
+        if "RT 80" in location_key and "METERING" in location_key:
+            return [37.82479, -122.31384]
+
         if location_key in self.location_database:
             return self.location_database[location_key]
 
